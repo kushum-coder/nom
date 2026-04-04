@@ -23,7 +23,21 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  location: String
+  location: String,
+
+  passwordResetOtpHash: {
+    type: String,
+    default: null,
+  },
+  passwordResetOtpExpires: {
+    type: Date,
+    default: null,
+  },
+  // After OTP is verified on its own screen; user may set password until this time.
+  passwordResetAllowedUntil: {
+    type: Date,
+    default: null,
+  },
 }, { timestamps: true }); // Auto adds Created at and Added at.
 
 module.exports = mongoose.model("User", userSchema);
