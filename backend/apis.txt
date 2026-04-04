@@ -1,0 +1,71 @@
+NomNomGo — Backend API reference
+================================
+Base URL (local): http://localhost:5000
+(PORT from .env; default 5000)
+
+Auth notes
+----------
+- Login sets an HTTP-only cookie named "token" (JWT). Send credentials (cookies) on requests that need auth.
+- CORS is configured for origin: http://localhost:3000 with credentials: true.
+- Protected routes expect the JWT cookie from POST /api/users/login.
+
+
+--------------------------------------------------------------------------------
+USERS — /api/users
+--------------------------------------------------------------------------------
+
+POST   /api/users/register
+       Public.
+       Body (JSON): name, email, password, confirmPassword, phone, location (optional fields per validation in code)
+       Creates a user (role defaults to "user").
+
+POST   /api/users/login
+       Public.
+       Body (JSON): email, password
+       Sets HTTP-only cookie "token". Returns user info (no password).
+
+POST   /api/users/logout
+       Clears the auth cookie.
+
+GET    /api/users/check
+       Protected (JWT cookie required).
+       Returns auth status and decoded user payload from token.
+
+POST   /api/users/forgot-password
+       Public.
+       Body (JSON): email
+       If the email exists, sends a 6-digit OTP by email (same response message whether or not the email exists).
+
+POST   /api/users/verify-reset-otp
+       Public.
+       Body (JSON): email, otp
+       Verifies the OTP; on success opens a short server-side window to set a new password (next step).
+
+POST   /api/users/reset-password
+       Public.
+       Body (JSON): email, password, confirmPassword (camelCase) or confirm_password (snake_case)
+       Allowed only after successful verify-reset-otp for that email, within the allowed time window.
+
+
+--------------------------------------------------------------------------------
+FOODS — /api/foods
+--------------------------------------------------------------------------------
+
+GET    /api/foods
+       Public.
+       Returns list of food items (newest first).
+
+POST   /api/foods
+       Protected: valid JWT cookie + user role must be "admin".
+       Body (JSON): name, price, category, image (required); description (optional); availability (optional, default true)
+
+PUT    /api/foods/:id
+       Protected: JWT + admin.
+       Body (JSON): fields to update (passed through to the food document).
+
+DELETE /api/foods/:id
+       Protected: JWT + admin.
+
+
+--------------------------------------------------------------------------------
+(No root GET / route is registered in app.js; only the routes above.)
