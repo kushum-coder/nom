@@ -10,12 +10,12 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { loginUser } from "../api";
 import { useCart } from "../context/CartContext";
 
 export default function Login() {
   const router = useRouter();
   const { saveToken } = useCart();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [secure, setSecure] = useState(true);
@@ -29,32 +29,19 @@ export default function Login() {
     }
 
     setLoading(true);
-
     try {
-      const response = await fetch("http://192.168.1.67:5000/api/users/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim(), password }),
-      });
+      const data = await loginUser(email.trim(), password.trim()); // trimmed
 
-      const data = await response.json();
-
-      if (!response.ok) {
+      if (!data.token) {
         alert(data.message || "Login failed");
-        setLoading(false);
         return;
       }
 
-      if (remember) {
-        await AsyncStorage.setItem("token", data.token);
-      }
-
+      if (remember) await AsyncStorage.setItem("token", data.token);
       if (saveToken) await saveToken(data.token);
 
-      alert("Login Successful!");
       router.replace("/home");
     } catch (err) {
-      console.error(err);
       alert("Network or backend error. Check your connection and backend.");
     } finally {
       setLoading(false);
@@ -95,7 +82,6 @@ export default function Login() {
           </TouchableOpacity>
         </View>
 
-        {/* ✅ Clean Simple Remember Me */}
         <TouchableOpacity
           style={styles.rememberContainer}
           onPress={() => setRemember(!remember)}
@@ -139,12 +125,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     padding: 20,
   },
-  card: {
-    width: "100%",
-    maxWidth: 400,
-    minHeight: 450,
-    paddingVertical: 40,
-  },
+  card: { width: "100%", maxWidth: 400, minHeight: 450, paddingVertical: 40 },
   logo: { position: "absolute", top: -40, left: 0, fontSize: 18 },
   title: {
     fontSize: 28,
@@ -192,8 +173,6 @@ const styles = StyleSheet.create({
     marginTop: 10,
     textAlign: "center",
   },
-
-  // ✅ FIXED checkbox (clean)
   rememberContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -207,11 +186,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  checkMark: {
-    fontSize: 12,
-    color: "#000",
-  },
-  rememberText: {
-    marginLeft: 8,
-  },
+  checkMark: { fontSize: 12, color: "#000" },
+  rememberText: { marginLeft: 8 },
 });

@@ -1,4 +1,3 @@
-// context/CartContext.js
 import { createContext, useContext, useState } from "react";
 
 export const CartContext = createContext();
@@ -8,11 +7,14 @@ export const CartProvider = ({ children }) => {
   const [token, setToken] = useState(null);
 
   const addToCart = (item) => {
+    const itemId = item.id || item._id;
+
     setCart((prev) => {
-      const existing = prev.find((i) => i.id === item.id);
+      const existing = prev.find((i) => (i.id || i._id) === itemId);
+
       if (existing) {
         return prev.map((i) =>
-          i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i,
+          (i.id || i._id) === itemId ? { ...i, quantity: i.quantity + 1 } : i,
         );
       } else {
         return [...prev, { ...item, quantity: 1 }];
@@ -23,7 +25,9 @@ export const CartProvider = ({ children }) => {
   const increaseQty = (id) => {
     setCart((prev) =>
       prev.map((item) =>
-        item.id === id ? { ...item, quantity: item.quantity + 1 } : item,
+        (item.id || item._id) === id
+          ? { ...item, quantity: item.quantity + 1 }
+          : item,
       ),
     );
   };
@@ -32,7 +36,9 @@ export const CartProvider = ({ children }) => {
     setCart((prev) =>
       prev
         .map((item) =>
-          item.id === id ? { ...item, quantity: item.quantity - 1 } : item,
+          (item.id || item._id) === id
+            ? { ...item, quantity: item.quantity - 1 }
+            : item,
         )
         .filter((item) => item.quantity > 0),
     );

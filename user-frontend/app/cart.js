@@ -1,11 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import {
-    FlatList,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useCart } from "../context/CartContext";
@@ -26,7 +26,13 @@ export default function Cart() {
 
       <FlatList
         data={cart}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={(item, index) =>
+          item.id
+            ? item.id.toString()
+            : item._id
+              ? item._id.toString()
+              : index.toString()
+        }
         contentContainerStyle={{ paddingBottom: 120 }}
         renderItem={({ item }) => (
           <View style={styles.itemCard}>
@@ -38,7 +44,7 @@ export default function Cart() {
             <View style={styles.controls}>
               <TouchableOpacity
                 style={styles.qtyBtn}
-                onPress={() => decreaseQty(item.id)}
+                onPress={() => decreaseQty(item.id || item._id)}
               >
                 <Text style={styles.qtyText}>-</Text>
               </TouchableOpacity>
@@ -47,7 +53,7 @@ export default function Cart() {
 
               <TouchableOpacity
                 style={styles.qtyBtn}
-                onPress={() => increaseQty(item.id)}
+                onPress={() => increaseQty(item.id || item._id)}
               >
                 <Text style={styles.qtyText}>+</Text>
               </TouchableOpacity>

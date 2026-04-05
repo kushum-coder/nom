@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { useEffect, useState } from "react";
 import {
   FlatList,
   Image,
@@ -10,38 +11,75 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { foods } from "../constants/data";
+import { fetchFoods } from "../api";
 import { useCart } from "../context/CartContext";
 
 export default function Home() {
   const router = useRouter();
   const { addToCart, cart } = useCart();
+  const [foods, setFoods] = useState([]);
 
-  const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+  useEffect(() => {
+    const getFoods = async () => {
+      try {
+        const foodsData = await fetchFoods();
+        if (Array.isArray(foodsData)) setFoods(foodsData);
+        else setFoods([]);
+      } catch (err) {
+        console.log("Error fetching foods:", err);
+        alert("Could not load foods. Check backend or network.");
+      }
+    };
+    getFoods();
+  }, []);
+
+  const totalItems = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* HEADER */}
       <View style={styles.headerRow}>
-        <Text style={styles.location}>Home - Kathmandu</Text>
-        <Ionicons name="heart-outline" size={24} color="#FF4800" />
+        <View>
+          <Text style={styles.deliver}>Deliver to</Text>
+          <View style={styles.locationRow}>
+            <Ionicons name="location-sharp" size={16} color="#FF4800" />
+            <Text style={styles.location}>Kathmandu</Text>
+            <Ionicons name="chevron-down" size={16} color="#000" />
+          </View>
+        </View>
+
+        <TouchableOpacity
+          style={styles.cartCircle}
+          onPress={() => router.push("/cart")}
+        >
+          <Ionicons name="cart-outline" size={20} color="#fff" />
+          {totalItems > 0 && (
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>{totalItems}</Text>
+            </View>
+          )}
+        </TouchableOpacity>
       </View>
 
-      {/* SEARCH */}
-      <TextInput
-        placeholder="Search for food or groceries"
-        placeholderTextColor="#666"
-        style={styles.search}
-      />
+      <View style={styles.searchContainer}>
+        <Ionicons name="search" size={18} color="#666" />
+        <TextInput
+          placeholder="Search for food or groceries"
+          placeholderTextColor="#666"
+          style={styles.searchInput}
+        />
+      </View>
 
-      {/* BANNER */}
       <View style={styles.banner}>
-        <Text style={styles.bannerText}>30% DISCOUNT{"\n"}CHICKEN PIZZA</Text>
+        <Image
+          source={require("../assets/images/banner.jpg")}
+          style={styles.bannerImage}
+        />
+        <View style={styles.bannerOverlay}>
+          <Text style={styles.bannerText}>30% DISCOUNT{"\n"}CHICKEN PIZZA</Text>
+        </View>
       </View>
 
-      {/* CATEGORY */}
       <Text style={styles.section}>Categories</Text>
-
       <View style={styles.categories}>
         {["Fast Food", "Grocery", "Desserts", "Drinks"].map((cat) => (
           <View key={cat} style={styles.chip}>
@@ -50,21 +88,21 @@ export default function Home() {
         ))}
       </View>
 
-      {/* FOOD LIST */}
       <FlatList
         data={foods}
         numColumns={2}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={(item) => (item.id || item._id)?.toString()}
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 100 }}
         renderItem={({ item }) => (
           <View style={styles.card}>
             <View style={styles.imagePlaceholder}>
-              {item.image && <Image source={item.image} style={styles.image} />}
+              {item.image ? (
+                <Image source={{ uri: item.image }} style={styles.image} />
+              ) : null}
             </View>
-
             <Text style={styles.name}>{item.name}</Text>
             <Text style={styles.price}>Rs. {item.price}</Text>
-
             <TouchableOpacity
               style={styles.addBtn}
               onPress={() => addToCart(item)}
@@ -74,132 +112,115 @@ export default function Home() {
           </View>
         )}
       />
-
-      {/* FLOATING CART */}
-      <TouchableOpacity
-        style={styles.cartBtn}
-        onPress={() => router.push("/cart")}
-      >
-        <Ionicons name="cart" size={22} color="#fff" />
-        <Text style={styles.cartText}>{totalItems}</Text>
-      </TouchableOpacity>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 15,
-    backgroundColor: "#F5F5F5",
-  },
-
+  container: { flex: 1, backgroundColor: "#fff", padding: 15 },
   headerRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 10,
+    alignItems: "center",
+    marginBottom: 15,
   },
-
-  location: {
-    fontWeight: "bold",
-  },
-
-  search: {
-    borderWidth: 1,
-    borderColor: "#FF4800",
+  deliver: { fontSize: 12, color: "#666" },
+  locationRow: { flexDirection: "row", alignItems: "center" },
+  location: { fontWeight: "bold", marginLeft: 4, marginRight: 4 },
+  cartCircle: {
+    width: 35,
+    height: 35,
     borderRadius: 20,
-    padding: 10,
-    marginBottom: 10,
-    backgroundColor: "#fff",
-  },
-
-  banner: {
     backgroundColor: "#FF4800",
-    borderRadius: 15,
-    padding: 15,
-    marginBottom: 10,
+    alignItems: "center",
+    justifyContent: "center",
   },
-
+  badge: {
+    position: "absolute",
+    top: -5,
+    right: -5,
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    width: 16,
+    height: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  badgeText: { fontSize: 10, fontWeight: "bold", color: "#FF4800" },
+  searchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#eee",
+    paddingHorizontal: 10,
+    borderRadius: 20,
+    marginBottom: 15,
+  },
+  searchInput: { flex: 1, paddingVertical: 8, marginLeft: 5 },
+  banner: {
+    height: 150,
+    borderRadius: 20,
+    marginBottom: 15,
+    overflow: "hidden",
+    position: "relative",
+  },
+  bannerImage: { width: "100%", height: "100%" },
+  bannerOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(255,77,0,0.3)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
   bannerText: {
     color: "#fff",
     fontWeight: "bold",
+    fontSize: 18,
+    textAlign: "center",
   },
-
-  section: {
-    fontWeight: "bold",
-    marginVertical: 10,
-  },
-
-  categories: {
-    flexDirection: "row",
-    marginBottom: 10,
-  },
-
+  section: { fontWeight: "bold", fontSize: 16, marginBottom: 10 },
+  categories: { flexDirection: "row", flexWrap: "wrap", marginBottom: 15 },
   chip: {
     borderWidth: 1,
     borderColor: "#FF4800",
-    borderRadius: 20,
-    paddingHorizontal: 12,
     paddingVertical: 5,
-    marginRight: 10,
-  },
-
-  card: {
-    width: "47%",
-    backgroundColor: "#fff",
-    margin: "1.5%",
+    paddingHorizontal: 10,
     borderRadius: 15,
-    padding: 12,
-    alignItems: "center",
-    elevation: 4,
+    marginRight: 10,
+    marginBottom: 10,
   },
-
+  card: {
+    flex: 1,
+    margin: 5,
+    backgroundColor: "#fff",
+    borderRadius: 15,
+    padding: 10,
+    elevation: 2,
+    position: "relative",
+  },
   imagePlaceholder: {
-    width: 90,
-    height: 90,
+    width: "100%",
+    height: 100,
     borderRadius: 10,
     backgroundColor: "#eee",
-    marginBottom: 8,
+    marginBottom: 5,
+    alignItems: "center",
+    justifyContent: "center",
   },
-
-  image: {
-    width: "100%",
-    height: "100%",
-    borderRadius: 10,
-  },
-
-  name: {
-    fontWeight: "bold",
-    marginTop: 5,
-  },
-
-  price: {
-    color: "#FF4800",
-    marginTop: 2,
-  },
-
+  image: { width: "100%", height: "100%", borderRadius: 10 },
+  name: { fontWeight: "bold", fontSize: 14 },
+  price: { fontSize: 12, color: "#666" },
   addBtn: {
     position: "absolute",
     bottom: 10,
     right: 10,
     backgroundColor: "#FF4800",
     borderRadius: 20,
-    padding: 6,
-  },
-
-  cartBtn: {
-    position: "absolute",
-    bottom: 20,
-    alignSelf: "center",
-    flexDirection: "row",
-    backgroundColor: "#FF4800",
-    padding: 15,
-    borderRadius: 30,
-  },
-
-  cartText: {
-    color: "#fff",
-    fontWeight: "bold",
-    marginLeft: 8,
+    width: 30,
+    height: 30,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

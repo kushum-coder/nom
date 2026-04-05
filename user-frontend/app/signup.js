@@ -9,12 +9,12 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { signupUser } from "../api";
 import { useCart } from "../context/CartContext";
 
 export default function Signup() {
   const router = useRouter();
   const { saveToken } = useCart();
-
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -54,7 +54,6 @@ export default function Signup() {
       return;
     }
 
-    // Simplified password validation: at least 6 chars
     if (trimmedPassword.length < 6) {
       alert("Password must be at least 6 characters");
       return;
@@ -66,38 +65,25 @@ export default function Signup() {
     }
 
     setLoading(true);
-
     try {
-      const response = await fetch(
-        "http://192.168.1.67:5000/api/users/register",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: trimmedName,
-            email: trimmedEmail,
-            phone: trimmedPhone,
-            password: trimmedPassword,
-            confirm: trimmedConfirm, // ✅ send confirm to backend
-          }),
-        },
-      );
+      const data = await signupUser({
+        name: trimmedName,
+        email: trimmedEmail,
+        phone: trimmedPhone,
+        password: trimmedPassword,
+        confirm: trimmedConfirm, // match backend
+      });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        alert(data.message || "Signup failed");
+      if (!data?.token) {
+        alert(data?.message || "Signup failed. Check backend.");
         return;
       }
 
-      if (saveToken && typeof saveToken === "function") {
-        await saveToken(data.token);
-      }
+      if (saveToken) await saveToken(data.token);
 
-      alert("Signup Successful!");
-      router.replace("/"); // navigate to login
+      router.replace("/"); // go to login after signup
     } catch (err) {
-      console.log(err);
+      console.error("Signup error:", err);
       alert("Something went wrong. Check your network or backend.");
     } finally {
       setLoading(false);
