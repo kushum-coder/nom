@@ -38,11 +38,17 @@ export default function Home() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.headerRow}>
-        <View>
+        {/* DELIVER TO STACK */}
+        <View style={styles.deliverContainer}>
           <Text style={styles.deliver}>Deliver to</Text>
           <View style={styles.locationRow}>
-            <Ionicons name="location-sharp" size={16} color="#FF4800" />
-            <Text style={styles.location}>Kathmandu</Text>
+            <Ionicons
+              name="location-sharp"
+              size={16}
+              color="#FF4800"
+              style={{ marginRight: 4 }}
+            />
+            <Text style={styles.location}>Home - Kathmandu</Text>
             <Ionicons name="chevron-down" size={16} color="#000" />
           </View>
         </View>
@@ -124,9 +130,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 15,
   },
+  deliverContainer: {
+    justifyContent: "center",
+    alignItems: "flex-start",
+  },
   deliver: { fontSize: 12, color: "#666" },
-  locationRow: { flexDirection: "row", alignItems: "center" },
-  location: { fontWeight: "bold", marginLeft: 4, marginRight: 4 },
+  locationRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 2, // spacing between Deliver to and Home-Kathmandu
+  },
+  location: { fontWeight: "bold", marginRight: 4 },
   cartCircle: {
     width: 35,
     height: 35,
@@ -172,7 +186,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     backgroundColor: "rgba(255,77,0,0.3)",
     justifyContent: "center",
-    alignItems: "center",
+    alignItems: "center", // center the banner text
   },
   bannerText: {
     color: "#fff",
@@ -197,7 +211,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderRadius: 15,
     padding: 10,
+    borderWidth: 1.5,
+    borderColor: "#FF4800",
     elevation: 2,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
     position: "relative",
   },
   imagePlaceholder: {
