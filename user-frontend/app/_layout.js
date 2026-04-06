@@ -7,15 +7,12 @@ import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { CartProvider, useCart } from "../context/CartContext";
 import Splash from "./splash";
 
-// Inner component that safely uses CartContext
 function LayoutContent({ showSplash, setShowSplash }) {
   const [loadingToken, setLoadingToken] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
-
   const { saveToken } = useCart();
 
-  // Check for stored token
   useEffect(() => {
     const checkToken = async () => {
       try {
@@ -35,7 +32,7 @@ function LayoutContent({ showSplash, setShowSplash }) {
   const showNavbar =
     pathname === "/home" || pathname === "/orders" || pathname === "/profile";
 
-  if (loadingToken) return null; // wait until AsyncStorage loads
+  if (loadingToken) return null;
 
   return (
     <>
@@ -92,21 +89,24 @@ export default function Layout() {
 
 const styles = StyleSheet.create({
   navbarContainer: {
-    position: "absolute",
-    bottom: 20,
-    left: 20,
-    right: 20,
     height: 70,
-    borderRadius: 35,
     flexDirection: "row",
     justifyContent: "space-around",
     alignItems: "center",
-    backgroundColor: "#1F1F1F",
+    backgroundColor: "rgba(255,255,255,0.35)",
+    borderRadius: 35,
+    borderWidth: 1.5,
+    borderColor: "#FF4800",
     shadowColor: "#000",
-    shadowOpacity: 0.35,
-    shadowOffset: { width: 0, height: 6 },
-    shadowRadius: 12,
-    elevation: 15,
+    shadowOpacity: 0.2,
+    shadowOffset: { width: 0, height: 8 },
+    shadowRadius: 16,
+    elevation: 12,
+    marginHorizontal: 15,
+    position: "absolute",
+    bottom: 15,
+    left: 0,
+    right: 0,
   },
   navButton: {
     flex: 1,
