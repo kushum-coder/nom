@@ -3,7 +3,15 @@ const Food = require("../models/Food");
 // GET /api/foods
 const getFoods = async (req, res) => {
   try {
-    const foods = await Food.find().sort({ createdAt: -1 });
+    const { search } = req.query;
+    const filter = {};
+
+    if (search?.trim()) {
+      const keyword = search.trim();
+      filter.name = { $regex: keyword, $options: "i" };
+    }
+
+    const foods = await Food.find(filter).sort({ createdAt: -1 });
     res.json(foods);
   } catch (error) {
     res.status(500).json({ message: "Failed to get foods" });

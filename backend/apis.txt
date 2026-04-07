@@ -54,6 +54,8 @@ FOODS — /api/foods
 GET    /api/foods
        Public.
        Returns list of food items (newest first).
+       Query params (optional): search (by food name only)
+       Example: /api/foods?search=burger
 
 POST   /api/foods
        Protected: valid JWT cookie + user role must be "admin".
