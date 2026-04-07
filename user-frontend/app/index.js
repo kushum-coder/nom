@@ -3,6 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
+  Image,
   ScrollView,
   StyleSheet,
   Text,
@@ -10,12 +11,12 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { loginUser } from "../api";
 import { useCart } from "../context/CartContext";
 
 export default function Login() {
   const router = useRouter();
   const { saveToken } = useCart();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [secure, setSecure] = useState(true);
@@ -29,32 +30,19 @@ export default function Login() {
     }
 
     setLoading(true);
-
     try {
-      const response = await fetch("http://192.168.1.67:5000/api/users/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim(), password }),
-      });
+      const data = await loginUser(email.trim(), password.trim());
 
-      const data = await response.json();
-
-      if (!response.ok) {
+      if (!data.token) {
         alert(data.message || "Login failed");
-        setLoading(false);
         return;
       }
 
-      if (remember) {
-        await AsyncStorage.setItem("token", data.token);
-      }
-
+      if (remember) await AsyncStorage.setItem("token", data.token);
       if (saveToken) await saveToken(data.token);
 
-      alert("Login Successful!");
       router.replace("/home");
     } catch (err) {
-      console.error(err);
       alert("Network or backend error. Check your connection and backend.");
     } finally {
       setLoading(false);
@@ -64,7 +52,12 @@ export default function Login() {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.card}>
-        <Text style={styles.logo}>Logo</Text>
+        <Image
+          source={require("../assets/images/logo.png")}
+          style={styles.logo}
+          resizeMode="contain"
+        />
+
         <Text style={styles.title}>WELCOME</Text>
         <Text style={styles.subtitle}>Sign In</Text>
 
@@ -95,16 +88,22 @@ export default function Login() {
           </TouchableOpacity>
         </View>
 
-        {/* ✅ Clean Simple Remember Me */}
-        <TouchableOpacity
-          style={styles.rememberContainer}
-          onPress={() => setRemember(!remember)}
-        >
-          <View style={styles.tickBox}>
-            {remember && <Text style={styles.checkMark}>✓</Text>}
-          </View>
-          <Text style={styles.rememberText}>Remember Me</Text>
-        </TouchableOpacity>
+        {/* ✅ FIXED ROW */}
+        <View style={styles.rowBetween}>
+          <TouchableOpacity
+            style={styles.rememberContainer}
+            onPress={() => setRemember(!remember)}
+          >
+            <View style={styles.tickBox}>
+              {remember && <Text style={styles.checkMark}>✓</Text>}
+            </View>
+            <Text style={styles.rememberText}>Remember Me</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={() => alert("Reset password flow")}>
+            <Text style={styles.forgotText}>Forgot Password?</Text>
+          </TouchableOpacity>
+        </View>
 
         <TouchableOpacity
           style={styles.button}
@@ -122,10 +121,6 @@ export default function Login() {
             Sign Up!
           </Text>
         </Text>
-
-        <TouchableOpacity onPress={() => alert("Reset password flow")}>
-          <Text style={styles.forgotText}>Forgot Password?</Text>
-        </TouchableOpacity>
       </View>
     </ScrollView>
   );
@@ -139,20 +134,30 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     padding: 20,
   },
+
   card: {
     width: "100%",
     maxWidth: 400,
     minHeight: 450,
     paddingVertical: 40,
+    alignItems: "center",
   },
-  logo: { position: "absolute", top: -40, left: 0, fontSize: 18 },
+
+  logo: {
+    width: 120,
+    height: 120,
+    marginBottom: 10,
+  },
+
   title: {
     fontSize: 28,
     fontWeight: "bold",
     textAlign: "center",
     color: "#FF4800",
   },
+
   subtitle: { marginBottom: 30, textAlign: "center" },
+
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -163,8 +168,11 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     paddingHorizontal: 15,
   },
+
   icon: { marginRight: 10 },
+
   input: { flex: 1, paddingVertical: 15 },
+
   passwordContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -175,30 +183,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     marginBottom: 15,
   },
+
   passwordInput: { flex: 1, paddingVertical: 15 },
-  button: {
-    width: "100%",
-    backgroundColor: "#FF4800",
-    padding: 15,
-    borderRadius: 25,
+
+  rowBetween: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
-  },
-  buttonText: { color: "#fff", fontWeight: "bold" },
-  bottomText: { marginTop: 20, textAlign: "center" },
-  link: { fontWeight: "bold" },
-  forgotText: {
-    color: "#FF4800",
-    fontWeight: "bold",
-    marginTop: 10,
-    textAlign: "center",
+    width: "100%",
+    marginBottom: 15,
   },
 
-  // ✅ FIXED checkbox (clean)
   rememberContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 15,
   },
+
   tickBox: {
     width: 18,
     height: 18,
@@ -207,11 +207,27 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  checkMark: {
-    fontSize: 12,
-    color: "#000",
+
+  checkMark: { fontSize: 12, color: "#000" },
+
+  rememberText: { marginLeft: 8 },
+
+  button: {
+    width: "100%",
+    backgroundColor: "#FF4800",
+    padding: 15,
+    borderRadius: 25,
+    alignItems: "center",
   },
-  rememberText: {
-    marginLeft: 8,
+
+  buttonText: { color: "#fff", fontWeight: "bold" },
+
+  bottomText: { marginTop: 20, textAlign: "center" },
+
+  link: { fontWeight: "bold" },
+
+  forgotText: {
+    color: "#FF4800",
+    fontWeight: "bold",
   },
 });

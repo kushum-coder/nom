@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
+  Image,
   ScrollView,
   StyleSheet,
   Text,
@@ -9,12 +10,12 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { signupUser } from "../api";
 import { useCart } from "../context/CartContext";
 
 export default function Signup() {
   const router = useRouter();
   const { saveToken } = useCart();
-
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -54,7 +55,6 @@ export default function Signup() {
       return;
     }
 
-    // Simplified password validation: at least 6 chars
     if (trimmedPassword.length < 6) {
       alert("Password must be at least 6 characters");
       return;
@@ -66,38 +66,25 @@ export default function Signup() {
     }
 
     setLoading(true);
-
     try {
-      const response = await fetch(
-        "http://192.168.1.67:5000/api/users/register",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: trimmedName,
-            email: trimmedEmail,
-            phone: trimmedPhone,
-            password: trimmedPassword,
-            confirm: trimmedConfirm, // ✅ send confirm to backend
-          }),
-        },
-      );
+      const data = await signupUser({
+        name: trimmedName,
+        email: trimmedEmail,
+        phone: trimmedPhone,
+        password: trimmedPassword,
+        confirm: trimmedConfirm,
+      });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        alert(data.message || "Signup failed");
+      if (!data?.token) {
+        alert(data?.message || "Signup failed. Check backend.");
         return;
       }
 
-      if (saveToken && typeof saveToken === "function") {
-        await saveToken(data.token);
-      }
+      if (saveToken) await saveToken(data.token);
 
-      alert("Signup Successful!");
-      router.replace("/"); // navigate to login
+      router.replace("/");
     } catch (err) {
-      console.log(err);
+      console.error("Signup error:", err);
       alert("Something went wrong. Check your network or backend.");
     } finally {
       setLoading(false);
@@ -107,7 +94,13 @@ export default function Signup() {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.card}>
-        <Text style={styles.logo}>Logo</Text>
+        {/* ✅ LOGO IMAGE REPLACED */}
+        <Image
+          source={require("../assets/images/logo.png")}
+          style={styles.logo}
+          resizeMode="contain"
+        />
+
         <Text style={styles.title}>WELCOME</Text>
         <Text style={styles.subtitle}>Sign Up</Text>
 
@@ -205,15 +198,31 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     padding: 20,
   },
-  card: { width: "100%", maxWidth: 400, minHeight: 500, paddingVertical: 40 },
-  logo: { position: "absolute", top: -40, left: 0, fontSize: 18 },
+
+  card: {
+    width: "100%",
+    maxWidth: 400,
+    minHeight: 500,
+    paddingVertical: 40,
+    alignItems: "center", // ✅ keeps logo centered
+  },
+
+  // ✅ UPDATED LOGO STYLE
+  logo: {
+    width: 120,
+    height: 120,
+    marginBottom: 10,
+  },
+
   title: {
     fontSize: 28,
     fontWeight: "bold",
     textAlign: "center",
     color: "#FF4800",
   },
+
   subtitle: { marginBottom: 30, textAlign: "center" },
+
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -224,8 +233,11 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     paddingHorizontal: 15,
   },
+
   icon: { marginRight: 10 },
+
   input: { flex: 1, paddingVertical: 15 },
+
   passwordContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -236,7 +248,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     marginBottom: 15,
   },
+
   passwordInput: { flex: 1, paddingVertical: 15 },
+
   button: {
     width: "100%",
     backgroundColor: "#FF4800",
@@ -244,7 +258,10 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     alignItems: "center",
   },
+
   buttonText: { color: "#fff", fontWeight: "bold" },
+
   bottomText: { marginTop: 20, textAlign: "center" },
+
   link: { fontWeight: "bold" },
 });
