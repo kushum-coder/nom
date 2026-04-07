@@ -4,6 +4,8 @@ import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
   Image,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -50,79 +52,90 @@ export default function Login() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.card}>
-        <Image
-          source={require("../assets/images/logo.png")}
-          style={styles.logo}
-          resizeMode="contain"
-        />
-
-        <Text style={styles.title}>WELCOME</Text>
-        <Text style={styles.subtitle}>Sign In</Text>
-
-        <View style={styles.inputContainer}>
-          <Ionicons name="mail-outline" size={20} style={styles.icon} />
-          <TextInput
-            placeholder="Enter Your Email"
-            placeholderTextColor="#999"
-            style={styles.input}
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={{ flex: 1 }}
+    >
+      <ScrollView
+        contentContainerStyle={styles.container}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.card}>
+          <Image
+            source={require("../assets/images/logo.png")}
+            style={styles.logo}
+            resizeMode="contain"
           />
-        </View>
 
-        <View style={styles.passwordContainer}>
-          <Ionicons name="lock-closed-outline" size={20} style={styles.icon} />
-          <TextInput
-            placeholder="Enter Password"
-            placeholderTextColor="#999"
-            secureTextEntry={secure}
-            style={styles.passwordInput}
-            value={password}
-            onChangeText={setPassword}
-          />
-          <TouchableOpacity onPress={() => setSecure(!secure)}>
-            <Ionicons name={secure ? "eye-off" : "eye"} size={22} />
-          </TouchableOpacity>
-        </View>
+          <Text style={styles.title}>WELCOME</Text>
+          <Text style={styles.subtitle}>Sign In</Text>
 
-        {/* ✅ FIXED ROW */}
-        <View style={styles.rowBetween}>
+          <View style={styles.inputContainer}>
+            <Ionicons name="mail-outline" size={20} style={styles.icon} />
+            <TextInput
+              placeholder="Enter Your Email"
+              placeholderTextColor="#999"
+              style={styles.input}
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+            />
+          </View>
+
+          <View style={styles.passwordContainer}>
+            <Ionicons
+              name="lock-closed-outline"
+              size={20}
+              style={styles.icon}
+            />
+            <TextInput
+              placeholder="Enter Password"
+              placeholderTextColor="#999"
+              secureTextEntry={secure}
+              style={styles.passwordInput}
+              value={password}
+              onChangeText={setPassword}
+            />
+            <TouchableOpacity onPress={() => setSecure(!secure)}>
+              <Ionicons name={secure ? "eye-off" : "eye"} size={22} />
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.rowBetween}>
+            <TouchableOpacity
+              style={styles.rememberContainer}
+              onPress={() => setRemember(!remember)}
+            >
+              <View style={styles.tickBox}>
+                {remember && <Text style={styles.checkMark}>✓</Text>}
+              </View>
+              <Text style={styles.rememberText}>Remember Me</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={() => alert("Reset password flow")}>
+              <Text style={styles.forgotText}>Forgot Password?</Text>
+            </TouchableOpacity>
+          </View>
+
           <TouchableOpacity
-            style={styles.rememberContainer}
-            onPress={() => setRemember(!remember)}
+            style={styles.button}
+            onPress={handleLogin}
+            disabled={loading}
           >
-            <View style={styles.tickBox}>
-              {remember && <Text style={styles.checkMark}>✓</Text>}
-            </View>
-            <Text style={styles.rememberText}>Remember Me</Text>
+            <Text style={styles.buttonText}>
+              {loading ? "Signing In..." : "Sign In"}
+            </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => alert("Reset password flow")}>
-            <Text style={styles.forgotText}>Forgot Password?</Text>
-          </TouchableOpacity>
+          <Text style={styles.bottomText}>
+            Don't have an account?{" "}
+            <Text style={styles.link} onPress={() => router.push("/signup")}>
+              Sign Up!
+            </Text>
+          </Text>
         </View>
-
-        <TouchableOpacity
-          style={styles.button}
-          onPress={handleLogin}
-          disabled={loading}
-        >
-          <Text style={styles.buttonText}>
-            {loading ? "Signing In..." : "Sign In"}
-          </Text>
-        </TouchableOpacity>
-
-        <Text style={styles.bottomText}>
-          Don't have an account?{" "}
-          <Text style={styles.link} onPress={() => router.push("/signup")}>
-            Sign Up!
-          </Text>
-        </Text>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
