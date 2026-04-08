@@ -1,4 +1,4 @@
-export const BASE_URL = "http://192.168.1.67:5000"; // your backend IP
+export const BASE_URL = "http://192.168.1.64:5000"; // your backend IP
 
 // ---------------- LOGIN ----------------
 export const loginUser = async (email, password) => {

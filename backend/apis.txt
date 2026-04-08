@@ -70,4 +70,37 @@ DELETE /api/foods/:id
 
 
 --------------------------------------------------------------------------------
+ORDERS — /api/orders
+--------------------------------------------------------------------------------
+
+POST   /api/orders
+       Protected: JWT (user/mobile).
+       Place a new order.
+       Body (JSON):
+       {
+         "items": [
+           { "food": "FOOD_ID", "quantity": 2 },
+           { "food": "ANOTHER_FOOD_ID", "quantity": 1 }
+         ]
+       }
+
+GET    /api/orders/my
+       Protected: JWT (user/mobile).
+       Returns logged-in user's own orders.
+
+GET    /api/orders/my/:id
+       Protected: JWT (user/mobile).
+       Returns one logged-in user's order details.
+
+GET    /api/orders
+       Protected: JWT + admin.
+       Returns all orders for admin order management.
+
+PATCH  /api/orders/:id/status
+       Protected: JWT + admin.
+       Body (JSON): status
+       Allowed status values: pending, preparing, out_for_delivery, delivered, cancelled
+
+
+--------------------------------------------------------------------------------
 (No root GET / route is registered in app.js; only the routes above.)
