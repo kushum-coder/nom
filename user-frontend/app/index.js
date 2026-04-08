@@ -112,7 +112,10 @@ export default function Login() {
               <Text style={styles.rememberText}>Remember Me</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity onPress={() => alert("Reset password flow")}>
+            {/* ✅ ONLY CHANGE IS HERE */}
+            <TouchableOpacity
+              onPress={() => router.push("/auth/forgotPassword")}
+            >
               <Text style={styles.forgotText}>Forgot Password?</Text>
             </TouchableOpacity>
           </View>
