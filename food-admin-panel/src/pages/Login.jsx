@@ -24,7 +24,7 @@ const Login = () => {
       const response = await API.post(
         "/users/login",
         { email, password },
-        { withCredentials: true } // 🔥 VERY IMPORTANT
+        { withCredentials: true } // VERY IMPORTANT
       );
 
       const { user } = response.data;
@@ -72,7 +72,6 @@ const Login = () => {
               onKeyPress={handleKeyPress}
             />
             <Button text="Log In" onClick={handleLogin} />
-            <button style={styles.forgotButton} onClick={() => alert('Forgot password flow not set')}>Forgot Password?</button>
             {error && <p style={styles.errorText}>{error}</p>}
           </div>
         </div>

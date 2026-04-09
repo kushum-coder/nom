@@ -202,7 +202,7 @@ const Dashboard = () => {
                 <h3 style={styles.cardTitle}>{item.name}</h3>
                 <p style={styles.cardDescription}>{item.description || "Fresh and tasty menu item."}</p>
                 <div style={styles.cardFooter}>
-                  <strong>Nrs. {Number(item.price).toFixed(0)}</strong>
+                  <strong>Rs. {Number(item.price).toFixed(0)}</strong>
                   <span style={item.availability ? styles.tagAvailable : styles.tagUnavailable}>
                     {item.availability ? "Available" : "Unavailable"}
                   </span>
