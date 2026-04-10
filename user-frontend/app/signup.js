@@ -77,8 +77,14 @@ export default function Signup() {
         confirm: trimmedConfirm,
       });
 
+      // Handle backend error messages gracefully
+      if (data?.message && !data?.token) {
+        alert(data.message); // shows "User already exists" or other backend messages
+        return;
+      }
+
       if (!data?.token) {
-        alert(data?.message || "Signup failed. Check backend.");
+        alert("Signup failed. Check backend.");
         return;
       }
 
@@ -86,8 +92,13 @@ export default function Signup() {
 
       router.replace("/");
     } catch (err) {
+      // Handle non-JSON or network errors
       console.error("Signup error:", err);
-      alert("Something went wrong. Check your network or backend.");
+      if (err?.message) {
+        alert(err.message);
+      } else {
+        alert("Something went wrong. Check your network or backend.");
+      }
     } finally {
       setLoading(false);
     }
