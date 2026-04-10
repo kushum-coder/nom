@@ -60,11 +60,7 @@ function LayoutContent({ showSplash, setShowSplash }) {
                     onPress={() => router.replace(route)}
                     style={styles.navButton}
                   >
-                    <Ionicons
-                      name={icons[index]}
-                      size={28}
-                      color={isActive ? "#FF6A00" : "#888"}
-                    />
+                    <Ionicons name={icons[index]} size={28} color={"#FFFFFF"} />
                     {isActive && <View style={styles.activeDot} />}
                   </TouchableOpacity>
                 );
@@ -93,7 +89,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-around",
     alignItems: "center",
-    backgroundColor: "rgba(255,255,255,0.35)",
+    backgroundColor: "#FF4800",
     borderRadius: 35,
     borderWidth: 1.5,
     borderColor: "#FF4800",
@@ -117,7 +113,7 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: "#FF6A00",
+    backgroundColor: "#FFFFFF",
     marginTop: 4,
   },
 });

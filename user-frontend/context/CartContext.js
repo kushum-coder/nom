@@ -4,50 +4,65 @@ export const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
   const [cart, setCart] = useState([]);
-  const [token, setToken] = useState(null);
 
+  // ✅ NORMALIZED ID FUNCTION (CRITICAL FIX)
+  const getId = (item) => item?._id || item?.id;
+
+  // ---------------- ADD TO CART (FIXED DUPLICATION BUG) ----------------
   const addToCart = (item) => {
-    const itemId = item.id || item._id;
+    const itemId = getId(item);
+    if (!itemId) return;
 
     setCart((prev) => {
-      const existing = prev.find((i) => (i.id || i._id) === itemId);
+      const existing = prev.find((i) => getId(i) === itemId);
 
       if (existing) {
         return prev.map((i) =>
-          (i.id || i._id) === itemId ? { ...i, quantity: i.quantity + 1 } : i,
+          getId(i) === itemId ? { ...i, quantity: (i.quantity || 0) + 1 } : i,
         );
-      } else {
-        return [...prev, { ...item, quantity: 1 }];
       }
+
+      return [
+        ...prev,
+        {
+          ...item,
+          _id: itemId,
+          quantity: 1,
+        },
+      ];
     });
   };
 
+  // ---------------- INCREASE ----------------
   const increaseQty = (id) => {
     setCart((prev) =>
       prev.map((item) =>
-        (item.id || item._id) === id
-          ? { ...item, quantity: item.quantity + 1 }
+        getId(item) === id
+          ? { ...item, quantity: (item.quantity || 0) + 1 }
           : item,
       ),
     );
   };
 
+  // ---------------- DECREASE ----------------
   const decreaseQty = (id) => {
     setCart((prev) =>
       prev
         .map((item) =>
-          (item.id || item._id) === id
-            ? { ...item, quantity: item.quantity - 1 }
+          getId(item) === id
+            ? { ...item, quantity: (item.quantity || 0) - 1 }
             : item,
         )
-        .filter((item) => item.quantity > 0),
+        .filter((item) => (item.quantity || 0) > 0),
     );
   };
 
+  // ---------------- TOTAL ----------------
   const getTotal = () =>
-    cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-
-  const saveToken = (jwt) => setToken(jwt);
+    cart.reduce(
+      (sum, item) => sum + (item.price || 0) * (item.quantity || 0),
+      0,
+    );
 
   return (
     <CartContext.Provider
@@ -57,8 +72,6 @@ export const CartProvider = ({ children }) => {
         increaseQty,
         decreaseQty,
         getTotal,
-        token,
-        saveToken,
       }}
     >
       {children}
