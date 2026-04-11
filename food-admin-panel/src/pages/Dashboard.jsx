@@ -5,12 +5,12 @@ import API from "../services/api";
 const Dashboard = () => {
   const navigate = useNavigate();
   const [items, setItems] = useState([]);
-  const [form, setForm] = useState({ name: "", price: "", category: "", imageUrl: "", availability: true });
+  const [form, setForm] = useState({ name: "", price: "", category: "", imageUrl: "", description: "", availability: true });
   const [editingId, setEditingId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const resetForm = () => setForm({ name: "", price: "", category: "", imageUrl: "", availability: true });
+  const resetForm = () => setForm({ name: "", price: "", category: "", imageUrl: "", description: "", availability: true });
 
   useEffect(() => {
     const fetchFoods = async () => {
@@ -35,6 +35,7 @@ const Dashboard = () => {
       price: Number(form.price),
       category: form.category.trim(),
       image: form.imageUrl.trim(),
+      description: form.description.trim(),
       availability: form.availability,
     };
 
@@ -65,6 +66,7 @@ const Dashboard = () => {
       price: String(item.price),
       category: item.category,
       imageUrl: item.image || "",
+      description: item.description || "",
       availability: item.availability ?? true,
     });
   };
@@ -161,30 +163,40 @@ const Dashboard = () => {
               onChange={(e) => setForm((f) => ({ ...f, imageUrl: e.target.value }))}
               style={styles.input}
             />
-            <label style={styles.availabilityLabel}>
-              <input
-                type="checkbox"
-                checked={form.availability}
-                onChange={(e) => setForm((f) => ({ ...f, availability: e.target.checked }))}
-                style={styles.checkbox}
-              />
-              Available
-            </label>
-            <button type="submit" style={styles.primaryButton}>
-              {editingId ? "Save Changes" : "Add Item"}
-            </button>
-            {editingId && (
-              <button
-                type="button"
-                style={styles.secondaryButton}
-                onClick={() => {
-                  setEditingId(null);
-                  resetForm();
-                }}
-              >
-                Cancel
-              </button>
-            )}
+            <input
+              placeholder="Description"
+              value={form.description}
+              onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+              style={styles.input}
+            />
+            <div style={styles.formFooter}>
+              <label style={styles.availabilityLabel}>
+                <input
+                  type="checkbox"
+                  checked={form.availability}
+                  onChange={(e) => setForm((f) => ({ ...f, availability: e.target.checked }))}
+                  style={styles.checkbox}
+                />
+                Available
+              </label>
+              <div style={styles.buttonGroup}>
+                <button type="submit" style={styles.primaryButton}>
+                  {editingId ? "Save Changes" : "Add Item"}
+                </button>
+                {editingId && (
+                  <button
+                    type="button"
+                    style={styles.secondaryButton}
+                    onClick={() => {
+                      setEditingId(null);
+                      resetForm();
+                    }}
+                  >
+                    Cancel
+                  </button>
+                )}
+              </div>
+            </div>
           </form>
         </section>
 
@@ -206,7 +218,7 @@ const Dashboard = () => {
                     {item.availability ? "Available" : "Unavailable"}
                   </span>
                 </div>
-                <p style={styles.cardDescription}>{item.description || "Fresh and tasty menu item."}</p>
+                <p style={styles.cardDescription}>{item.description}</p>
                 <div style={styles.cardFooter}>
                   <strong>Rs. {Number(item.price).toFixed(0)}</strong>
                   
@@ -337,6 +349,16 @@ const styles = {
     borderRadius: "8px",
     padding: "10px 12px",
     fontSize: "0.95rem",
+  },
+  formFooter: {
+    gridColumn: "1 / -1",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  buttonGroup: {
+    display: "flex",
+    gap: "10px",
   },
   primaryButton: {
     backgroundColor: "#ff5a0a",
