@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { useState } from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useCart } from "../context/CartContext";
 
@@ -9,13 +10,32 @@ export default function FoodDetail() {
 
   const { id, name, description, price, image } = useLocalSearchParams();
 
+  const [quantity, setQuantity] = useState(1);
+
   const handleAdd = () => {
     addToCart({
       _id: String(id),
       name: name,
-      price: Number(price), // ✅ FIX: ensure number
+      price: Number(price),
       image: image,
     });
+  };
+
+  const handleIncrease = () => {
+    setQuantity(quantity + 1);
+    addToCart({
+      _id: String(id),
+      name: name,
+      price: Number(price),
+      image: image,
+    });
+  };
+
+  const handleDecrease = () => {
+    if (quantity > 1) {
+      setQuantity(quantity - 1);
+      // Optional: only UI decrease (since no removeFromCart provided)
+    }
   };
 
   return (
@@ -39,12 +59,28 @@ export default function FoodDetail() {
 
         {/* CONTENT */}
         <View style={styles.content}>
-          <Text style={styles.name}>{name}</Text>
+          {/* NAME + QUANTITY */}
+          <View style={styles.nameRow}>
+            <Text style={styles.name}>{name}</Text>
+
+            <View style={styles.qtyContainer}>
+              <TouchableOpacity onPress={handleDecrease} style={styles.qtyBtn}>
+                <Text style={styles.qtyText}>-</Text>
+              </TouchableOpacity>
+
+              <Text style={styles.qtyNumber}>{quantity}</Text>
+
+              <TouchableOpacity onPress={handleIncrease} style={styles.qtyBtn}>
+                <Text style={styles.qtyText}>+</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
 
           <Text style={styles.desc}>
             {description || "Delicious food prepared freshly."}
           </Text>
 
+          {/* ONLY PRICE (NO TOTAL) */}
           <Text style={styles.price}>Rs. {price}</Text>
 
           {/* BUTTON */}
@@ -92,6 +128,35 @@ const styles = StyleSheet.create({
 
   name: {
     fontSize: 18,
+    fontWeight: "bold",
+  },
+
+  nameRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+
+  qtyContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  qtyBtn: {
+    backgroundColor: "#eee",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+
+  qtyText: {
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+
+  qtyNumber: {
+    marginHorizontal: 10,
+    fontSize: 16,
     fontWeight: "bold",
   },
 

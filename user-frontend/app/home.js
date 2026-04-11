@@ -5,6 +5,7 @@ import {
   Animated,
   FlatList,
   Image,
+  Keyboard,
   Platform,
   StyleSheet,
   Text,
@@ -59,6 +60,23 @@ export default function Home() {
     }
   };
 
+  // CATEGORY API CALL
+  const getFoodsByCategory = async (category) => {
+    try {
+      setLoading(true);
+      const res = await fetch(
+        `http://192.168.1.67:5000/api/foods?category=${encodeURIComponent(category)}`,
+      );
+      const data = await res.json();
+      setFoods(Array.isArray(data) ? data : []);
+      Keyboard.dismiss(); // hide keyboard on category click
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const getCartId = (item) => item._id || item.id;
 
   const getQty = (id) => {
@@ -68,12 +86,13 @@ export default function Home() {
 
   const totalItems = cart.reduce((sum, i) => sum + Number(i.quantity || 0), 0);
 
+  const isSearchActive = search?.trim()?.length > 0;
+
   return (
     <SafeAreaView style={styles.container}>
       {/* HEADER */}
       <View style={styles.header}>
         <View style={styles.logoContainer}>
-          {/* ✅ FIXED PERFECT CIRCLE LOGO (NO CUT, NO SQUARE LOOK) */}
           <View style={styles.logoWrapper}>
             <Animated.Image
               source={require("../assets/images/logo2.png")}
@@ -109,11 +128,13 @@ export default function Home() {
           placeholderTextColor="#888"
           value={search}
           onChangeText={setSearch}
+          onSubmitEditing={() => Keyboard.dismiss()}
+          returnKeyType="search"
           style={styles.searchInput}
         />
       </View>
 
-      {/* PROMO BANNER */}
+      {/* PROMO */}
       <View style={styles.bannerWrapper}>
         <View style={styles.promoCard}>
           <View style={styles.promoTextBox}>
@@ -137,17 +158,23 @@ export default function Home() {
           <TouchableOpacity
             key={c}
             style={styles.categoryChip}
-            onPress={() => {
-              if (c === "Fast Food") setSearch("fast food");
-            }}
+            onPress={() => getFoodsByCategory(c)}
           >
             <Text style={styles.categoryText}>{c}</Text>
           </TouchableOpacity>
         ))}
       </View>
 
-      {/* FOOD LIST */}
-      {loading ? (
+      {/* EMPTY STATE */}
+      {!loading && foods.length === 0 ? (
+        <View style={styles.emptyBox}>
+          <Text style={styles.emptyText}>
+            {isSearchActive
+              ? "🔍 No results found for your search"
+              : "😋 Nothing here yet, try another category"}
+          </Text>
+        </View>
+      ) : loading ? (
         <View style={{ marginTop: 10 }}>
           {[1, 2, 3, 4].map((_, i) => (
             <View key={i} style={styles.skeletonCard} />
@@ -239,7 +266,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
-  /* ✅ TRUE PERFECT CIRCLE FIX */
   logoWrapper: {
     width: 44,
     height: 44,
@@ -427,5 +453,18 @@ const styles = StyleSheet.create({
 
   qty: {
     fontWeight: "bold",
+  },
+
+  emptyBox: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 60,
+  },
+
+  emptyText: {
+    fontSize: 14,
+    color: "#888",
+    fontWeight: "500",
   },
 });
