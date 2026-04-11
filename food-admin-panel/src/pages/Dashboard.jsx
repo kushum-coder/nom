@@ -61,7 +61,7 @@ const Dashboard = () => {
 
   const editItem = (item) => {
     setEditingId(item._id);
-    setForm({ 
+    setForm({
       name: item.name,
       price: String(item.price),
       category: item.category,
@@ -118,15 +118,15 @@ const Dashboard = () => {
         <button style={styles.navButton} onClick={() => navigate("/orders")}>
           Order Management
         </button>
-        
+
       </aside>
 
       <main style={styles.main}>
         <div style={styles.topBar}>
           <h1 style={styles.title}>Menu Management</h1>
           <button style={styles.logoutButton} onClick={handleLogout}>
-          Logout
-        </button>
+            Logout
+          </button>
         </div>
 
         {loading && <p style={styles.emptyText}>Loading menu...</p>}
@@ -213,15 +213,15 @@ const Dashboard = () => {
                   style={styles.cardImage}
                 />
                 <div style={styles.cardName}>
-                <h3 style={styles.cardTitle}>{item.name}</h3>
-                <span style={item.availability ? styles.tagAvailable : styles.tagUnavailable}>
+                  <h3 style={styles.cardTitle}>{item.name}</h3>
+                  <span style={item.availability ? styles.tagAvailable : styles.tagUnavailable}>
                     {item.availability ? "Available" : "Unavailable"}
                   </span>
                 </div>
                 <p style={styles.cardDescription}>{item.description}</p>
                 <div style={styles.cardFooter}>
                   <strong>Rs. {Number(item.price).toFixed(0)}</strong>
-                  
+
                 </div>
                 <div style={styles.cardActions}>
                   <button style={styles.editBtn} onClick={() => editItem(item)}>
@@ -233,7 +233,7 @@ const Dashboard = () => {
                   <button style={styles.deleteButton} onClick={() => deleteItem(item._id)}>
                     🗑️ Delete
                   </button>
-                  
+
                 </div>
               </article>
             ))
