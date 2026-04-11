@@ -116,14 +116,15 @@ const Dashboard = () => {
         <button style={styles.navButton} onClick={() => navigate("/orders")}>
           Order Management
         </button>
-        <button style={styles.logoutButton} onClick={handleLogout}>
-          Logout
-        </button>
+        
       </aside>
 
       <main style={styles.main}>
         <div style={styles.topBar}>
           <h1 style={styles.title}>Menu Management</h1>
+          <button style={styles.logoutButton} onClick={handleLogout}>
+          Logout
+        </button>
         </div>
 
         {loading && <p style={styles.emptyText}>Loading menu...</p>}
