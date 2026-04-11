@@ -48,7 +48,7 @@ const updateFood = async (req, res) => {
   const updates = req.body;
 
   try {
-    const food = await Food.findByIdAndUpdate(id, updates, { new: true });
+    const food = await Food.findByIdAndUpdate(id, updates, { returnDocument: 'after' });
     if (!food) {
       return res.status(404).json({ message: "Food item not found" });
     }
