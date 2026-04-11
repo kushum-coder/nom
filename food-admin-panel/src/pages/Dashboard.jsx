@@ -103,6 +103,15 @@ const Dashboard = () => {
     window.location.href = "/";
   };
 
+  const groupedItems = items.reduce((acc, item) => {
+    const category = item.category || "Uncategorized";
+    if (!acc[category]) acc[category] = [];
+    acc[category].push(item);
+    return acc;
+  }, {});
+
+  const categories = Object.keys(groupedItems).sort();
+
   return (
     <div style={styles.layout}>
       <aside style={styles.sidebar}>
@@ -200,45 +209,47 @@ const Dashboard = () => {
           </form>
         </section>
 
-        <h2 style={styles.sectionTitle}>Fast Food</h2>
-        <section style={styles.grid}>
-          {items.length === 0 ? (
-            <p style={styles.emptyText}>No menu items yet.</p>
-          ) : (
-            items.map((item) => (
-              <article key={item._id} style={styles.menuCard}>
-                <img
-                  src={item.image || "https://via.placeholder.com/320x200?text=No+Image"}
-                  alt={item.name}
-                  style={styles.cardImage}
-                />
-                <div style={styles.cardName}>
-                  <h3 style={styles.cardTitle}>{item.name}</h3>
-                  <span style={item.availability ? styles.tagAvailable : styles.tagUnavailable}>
-                    {item.availability ? "Available" : "Unavailable"}
-                  </span>
-                </div>
-                <p style={styles.cardDescription}>{item.description}</p>
-                <div style={styles.cardFooter}>
-                  <strong>Rs. {Number(item.price).toFixed(0)}</strong>
-
-                </div>
-                <div style={styles.cardActions}>
-                  <button style={styles.editBtn} onClick={() => editItem(item)}>
-                    ✎ Edit
-                  </button>
-                  <button style={styles.toggleBtn} onClick={() => toggleAvailability(item)}>
-                    {item.availability ? "Mark Unavailable" : "Mark Available"}
-                  </button>
-                  <button style={styles.deleteButton} onClick={() => deleteItem(item._id)}>
-                    🗑️ Delete
-                  </button>
-
-                </div>
-              </article>
-            ))
-          )}
-        </section>
+        {categories.length === 0 ? (
+          <p style={styles.emptyText}>No menu items yet.</p>
+        ) : (
+          categories.map(category => (
+            <div key={category} style={{ marginBottom: "30px" }}>
+              <h2 style={styles.sectionTitle}>{category}</h2>
+              <section style={styles.grid}>
+                {groupedItems[category].map((item) => (
+                  <article key={item._id} style={styles.menuCard}>
+                    <img
+                      src={item.image || "https://via.placeholder.com/320x200?text=No+Image"}
+                      alt={item.name}
+                      style={styles.cardImage}
+                    />
+                    <div style={styles.cardName}>
+                      <h3 style={styles.cardTitle}>{item.name}</h3>
+                      <span style={item.availability ? styles.tagAvailable : styles.tagUnavailable}>
+                        {item.availability ? "Available" : "Unavailable"}
+                      </span>
+                    </div>
+                    <p style={styles.cardDescription}>{item.description}</p>
+                    <div style={styles.cardFooter}>
+                      <strong>Rs. {Number(item.price).toFixed(0)}</strong>
+                    </div>
+                    <div style={styles.cardActions}>
+                      <button style={styles.editBtn} onClick={() => editItem(item)}>
+                        ✎ Edit
+                      </button>
+                      <button style={styles.toggleBtn} onClick={() => toggleAvailability(item)}>
+                        {item.availability ? "Mark Unavailable" : "Mark Available"}
+                      </button>
+                      <button style={styles.deleteButton} onClick={() => deleteItem(item._id)}>
+                        🗑️ Delete
+                      </button>
+                    </div>
+                  </article>
+                ))}
+              </section>
+            </div>
+          ))
+        )}
       </main>
     </div>
   );
@@ -391,7 +402,7 @@ const styles = {
   cardImage: {
     width: "100%",
     height: 170,
-    objectFit: "contain",
+    objectFit: "cover",
     borderRadius: 12,
     background: "#fafafa",
   },

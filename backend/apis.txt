@@ -54,8 +54,14 @@ FOODS — /api/foods
 GET    /api/foods
        Public.
        Returns list of food items (newest first).
-       Query params (optional): search (by food name only)
-       Example: /api/foods?search=burger
+       Query params (optional): search (by food name), category (by category name, case-insensitive)
+       Examples: /api/foods?search=burger
+                 /api/foods?category=Fast Food
+
+GET    /api/foods/category/:categoryName
+       Public.
+       Returns list of food items belonging to the specified category (case-insensitive exact match).
+       Example: /api/foods/category/Drinks
 
 POST   /api/foods
        Protected: valid JWT cookie + user role must be "admin".
