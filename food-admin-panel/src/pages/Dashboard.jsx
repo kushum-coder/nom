@@ -199,24 +199,28 @@ const Dashboard = () => {
                   alt={item.name}
                   style={styles.cardImage}
                 />
+                <div style={styles.cardName}>
                 <h3 style={styles.cardTitle}>{item.name}</h3>
-                <p style={styles.cardDescription}>{item.description || "Fresh and tasty menu item."}</p>
-                <div style={styles.cardFooter}>
-                  <strong>Rs. {Number(item.price).toFixed(0)}</strong>
-                  <span style={item.availability ? styles.tagAvailable : styles.tagUnavailable}>
+                <span style={item.availability ? styles.tagAvailable : styles.tagUnavailable}>
                     {item.availability ? "Available" : "Unavailable"}
                   </span>
                 </div>
+                <p style={styles.cardDescription}>{item.description || "Fresh and tasty menu item."}</p>
+                <div style={styles.cardFooter}>
+                  <strong>Rs. {Number(item.price).toFixed(0)}</strong>
+                  
+                </div>
                 <div style={styles.cardActions}>
                   <button style={styles.editBtn} onClick={() => editItem(item)}>
-                    Edit
+                    ✎ Edit
                   </button>
                   <button style={styles.toggleBtn} onClick={() => toggleAvailability(item)}>
                     {item.availability ? "Mark Unavailable" : "Mark Available"}
                   </button>
                   <button style={styles.deleteButton} onClick={() => deleteItem(item._id)}>
-                    Delete
+                    🗑️ Delete
                   </button>
+                  
                 </div>
               </article>
             ))
@@ -391,6 +395,8 @@ const styles = {
     borderRadius: 8,
     fontSize: "0.75rem",
     padding: "4px 8px",
+    marginTop: 16,
+    marginBottom: 16,
   },
   tagUnavailable: {
     background: "#ffd4d4",
@@ -398,12 +404,19 @@ const styles = {
     borderRadius: 8,
     fontSize: "0.75rem",
     padding: "4px 8px",
+    marginTop: 16,
+    marginBottom: 16,
   },
   cardActions: {
     display: "flex",
-    gap: 8,
+    gap: 16,
     marginTop: 10,
     flexWrap: "wrap",
+    justifyContent: "space-between",
+  },
+  cardName: {
+    display: "flex",
+    justifyContent: "space-between",
   },
   editBtn: {
     backgroundColor: "#4a5cff",

@@ -6,17 +6,23 @@ const safeFetchJson = async (url, options) => {
     const res = await fetch(url, options);
     const text = await res.text();
 
+    let data;
     try {
-      const data = JSON.parse(text);
-      if (!res.ok) throw new Error(data.message || "Request failed");
-      return data;
+      data = JSON.parse(text);
     } catch {
       console.error("Non-JSON response:", text);
       throw new Error("Server did not return JSON. Check backend route.");
     }
+
+    if (!res.ok) {
+      const message = data?.message || "Request failed";
+      throw new Error(message);
+    }
+
+    return data;
   } catch (err) {
     console.error("Fetch error:", err);
-    throw err;
+    throw new Error(err.message || "Network error.");
   }
 };
 
@@ -44,9 +50,36 @@ export const signupUser = async ({ name, email, phone, password, confirm }) => {
   });
 };
 
-// ---------------- FETCH FOODS ----------------
-export const fetchFoods = async () => {
-  return safeFetchJson(`${BASE_URL}/api/foods`);
+// ---------------- FETCH FOODS (UPDATED WITH SEARCH) ----------------
+export const fetchFoods = async (search = "") => {
+  const url = search
+    ? `${BASE_URL}/api/foods?search=${encodeURIComponent(search)}`
+    : `${BASE_URL}/api/foods`;
+
+  return safeFetchJson(url);
+};
+
+// ---------------- ORDER APIs ----------------
+
+// PLACE ORDER
+export const placeOrder = async (items, token) => {
+  return safeFetchJson(`${BASE_URL}/api/orders`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token && { Authorization: `Bearer ${token}` }),
+    },
+    body: JSON.stringify({ items }),
+  });
+};
+
+// GET MY ORDERS
+export const getMyOrders = async (token) => {
+  return safeFetchJson(`${BASE_URL}/api/orders/my`, {
+    headers: {
+      ...(token && { Authorization: `Bearer ${token}` }),
+    },
+  });
 };
 
 // ---------------- FORGOT PASSWORD FLOW ----------------
