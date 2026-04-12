@@ -50,18 +50,24 @@ export const signupUser = async ({ name, email, phone, password, confirm }) => {
   });
 };
 
-// ---------------- FETCH FOODS (UPDATED WITH SEARCH) ----------------
-export const fetchFoods = async (search = "") => {
-  const url = search
-    ? `${BASE_URL}/api/foods?search=${encodeURIComponent(search)}`
-    : `${BASE_URL}/api/foods`;
+// ---------------- FETCH FOODS (FIXED) ----------------
+export const fetchFoods = async ({ search = "", category = "" } = {}) => {
+  let url = `${BASE_URL}/api/foods`;
+
+  // CATEGORY (IMPORTANT FIX - matches backend route)
+  if (category && category.trim().length > 0) {
+    url = `${BASE_URL}/api/foods/category/${encodeURIComponent(category.trim())}`;
+  }
+
+  // SEARCH (only if no category selected)
+  else if (search && search.trim().length > 0) {
+    url = `${BASE_URL}/api/foods?search=${encodeURIComponent(search.trim())}`;
+  }
 
   return safeFetchJson(url);
 };
 
 // ---------------- ORDER APIs ----------------
-
-// PLACE ORDER
 export const placeOrder = async (items, token) => {
   return safeFetchJson(`${BASE_URL}/api/orders`, {
     method: "POST",
@@ -73,7 +79,6 @@ export const placeOrder = async (items, token) => {
   });
 };
 
-// GET MY ORDERS
 export const getMyOrders = async (token) => {
   return safeFetchJson(`${BASE_URL}/api/orders/my`, {
     headers: {
@@ -83,8 +88,6 @@ export const getMyOrders = async (token) => {
 };
 
 // ---------------- FORGOT PASSWORD FLOW ----------------
-
-// Send OTP
 export const sendOtp = async (email) => {
   return safeFetchJson(`${BASE_URL}/api/users/forgot-password`, {
     method: "POST",
@@ -93,7 +96,6 @@ export const sendOtp = async (email) => {
   });
 };
 
-// Verify OTP
 export const verifyOtp = async (email, otp) => {
   return safeFetchJson(`${BASE_URL}/api/users/verify-reset-otp`, {
     method: "POST",
@@ -102,7 +104,6 @@ export const verifyOtp = async (email, otp) => {
   });
 };
 
-// Reset Password
 export const resetPassword = async (email, password, confirmPassword) => {
   return safeFetchJson(`${BASE_URL}/api/users/reset-password`, {
     method: "POST",
