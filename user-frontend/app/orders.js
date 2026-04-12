@@ -1,25 +1,45 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useState } from "react";
 import {
   FlatList,
   Image,
+  StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { getMyOrders } from "../api";
 
 export default function Orders() {
   const [tab, setTab] = useState("ongoing");
   const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadOrders();
   }, []);
 
   const loadOrders = async () => {
-    const data = await getMyOrders(null);
-    setOrders(data);
+    try {
+      const token = await AsyncStorage.getItem("token");
+
+      if (!token) {
+        setOrders([]);
+        return;
+      }
+
+      const data = await getMyOrders(token);
+      console.log("ORDERS:", data);
+
+      setOrders(data || []);
+    } catch (err) {
+      console.log("Order fetch error:", err.message);
+      setOrders([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const getStep = (status) => {
@@ -41,111 +61,314 @@ export default function Orders() {
       : orders.filter((o) => o.status === "delivered");
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>My Orders</Text>
+    <SafeAreaView style={styles.container} edges={["top"]}>
+      <StatusBar barStyle="dark-content" />
 
-      {/* TABS */}
-      <View style={styles.tabs}>
-        <TouchableOpacity onPress={() => setTab("ongoing")}>
-          <Text style={tab === "ongoing" ? styles.active : styles.inactive}>
+      {/* HEADER */}
+      <Text style={styles.header}>
+        {tab === "ongoing" ? "Order" : "History"}
+      </Text>
+
+      {/* TOGGLE */}
+      <View style={styles.toggleWrapper}>
+        <TouchableOpacity
+          style={[styles.toggleBtn, tab === "ongoing" && styles.activeToggle]}
+          onPress={() => setTab("ongoing")}
+        >
+          <Text
+            style={[styles.toggleText, tab === "ongoing" && styles.activeText]}
+          >
             Ongoing
           </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => setTab("history")}>
-          <Text style={tab === "history" ? styles.active : styles.inactive}>
+        <TouchableOpacity
+          style={[styles.toggleBtn, tab === "history" && styles.activeToggle]}
+          onPress={() => setTab("history")}
+        >
+          <Text
+            style={[styles.toggleText, tab === "history" && styles.activeText]}
+          >
             History
           </Text>
         </TouchableOpacity>
       </View>
 
+      {/* EMPTY STATE */}
+      {!loading && filtered.length === 0 && (
+        <Text style={styles.emptyText}>No orders yet</Text>
+      )}
+
       <FlatList
         data={filtered}
         keyExtractor={(item) => item._id}
+        contentContainerStyle={{ paddingBottom: 20 }}
         renderItem={({ item }) => {
           const step = getStep(item.status);
 
           return (
             <View style={styles.card}>
-              <Image source={getImage(item.status)} style={styles.image} />
+              {/* ONGOING */}
+              {tab === "ongoing" && (
+                <>
+                  <View style={styles.stepsRow}>
+                    {[1, 2, 3].map((i) => (
+                      <View key={i} style={styles.stepItem}>
+                        <View
+                          style={[
+                            styles.circle,
+                            i <= step && styles.activeCircle,
+                          ]}
+                        >
+                          <Image
+                            source={
+                              i === 1
+                                ? require("../assets/preparing.png")
+                                : i === 2
+                                  ? require("../assets/readytodeliver.jpg")
+                                  : require("../assets/delivered.jpg")
+                            }
+                            style={styles.circleImage}
+                          />
+                        </View>
 
-              {/* PROGRESS */}
-              <View style={styles.progress}>
-                {[1, 2, 3].map((i) => (
-                  <View
-                    key={i}
-                    style={[styles.circle, i <= step && styles.activeCircle]}
+                        <Text style={styles.stepText}>
+                          {i === 1
+                            ? "Preparing"
+                            : i === 2
+                              ? "Ready To Deliver"
+                              : "Delivered"}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+
+                  {item.items?.map((food, index) => (
+                    <View key={index} style={styles.itemRow}>
+                      <Image
+                        source={{ uri: food.image }}
+                        style={styles.foodImage}
+                      />
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.foodName}>{food.name}</Text>
+                        <Text style={styles.foodPrice}>Rs. {food.price}</Text>
+                      </View>
+                      <Text style={styles.qty}>x{food.quantity}</Text>
+                    </View>
+                  ))}
+
+                  <View style={styles.totalRow}>
+                    <Text style={styles.totalText}>Total</Text>
+                    <Text style={styles.totalAmount}>Rs {item.totalPrice}</Text>
+                  </View>
+                </>
+              )}
+
+              {/* HISTORY */}
+              {tab === "history" && (
+                <View style={styles.historyRow}>
+                  <Image
+                    source={getImage(item.status)}
+                    style={styles.historyImage}
                   />
-                ))}
-              </View>
 
-              <Text style={styles.price}>Rs {item.totalPrice}</Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.foodName}>
+                      {item.items?.[0]?.name || "Food Item"}
+                    </Text>
+                    <Text style={styles.timeText}>12:01</Text>
+                  </View>
+
+                  <View style={{ alignItems: "flex-end" }}>
+                    <Text style={styles.priceRight}>Rs {item.totalPrice}</Text>
+                    <View style={styles.completedBtn}>
+                      <Text style={styles.completedText}>Completed</Text>
+                    </View>
+                  </View>
+                </View>
+              )}
             </View>
           );
         }}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 
+const ORANGE = "#FF4800";
+
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 15, backgroundColor: "#fff" },
+  container: {
+    flex: 1,
+    backgroundColor: "#F5F5F5",
+    paddingHorizontal: 15,
+    paddingTop: 10, // ✅ FIXES CUT ISSUE
+  },
 
   header: {
     textAlign: "center",
+    fontSize: 20,
     fontWeight: "bold",
-    color: "#FF4800",
-    marginBottom: 10,
+    color: ORANGE,
+    marginBottom: 15,
   },
 
-  tabs: {
+  toggleWrapper: {
     flexDirection: "row",
-    justifyContent: "space-around",
-    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: ORANGE,
+    borderRadius: 25,
+    overflow: "hidden",
+    marginBottom: 15,
   },
 
-  active: {
-    color: "#FF4800",
-    fontWeight: "bold",
+  toggleBtn: {
+    flex: 1,
+    padding: 10,
+    alignItems: "center",
   },
 
-  inactive: {
-    color: "#999",
+  activeToggle: {
+    backgroundColor: ORANGE,
+  },
+
+  toggleText: {
+    color: "#333",
+    fontWeight: "600",
+  },
+
+  activeText: {
+    color: "#fff",
+  },
+
+  emptyText: {
+    textAlign: "center",
+    marginTop: 50,
+    color: "#777",
   },
 
   card: {
-    backgroundColor: "#f5f5f5",
-    padding: 10,
+    backgroundColor: "#fff",
     borderRadius: 15,
+    padding: 12,
+    marginBottom: 15,
+    elevation: 3,
+  },
+
+  stepsRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: 10,
   },
 
-  image: {
-    width: "100%",
-    height: 120,
-    borderRadius: 10,
-  },
-
-  progress: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginVertical: 10,
+  stepItem: {
+    alignItems: "center",
+    flex: 1,
   },
 
   circle: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: "#ccc",
+    width: 55,
+    height: 55,
+    borderRadius: 30,
+    borderWidth: 2,
+    borderColor: "#ccc",
+    justifyContent: "center",
+    alignItems: "center",
+    overflow: "hidden",
+    backgroundColor: "#fff",
   },
 
   activeCircle: {
-    backgroundColor: "#FF4800",
+    borderColor: ORANGE,
   },
 
-  price: {
-    textAlign: "right",
-    color: "#FF4800",
+  circleImage: {
+    width: "100%",
+    height: "100%",
+    resizeMode: "cover",
+  },
+
+  stepText: {
+    fontSize: 11,
+    marginTop: 5,
+    textAlign: "center",
+  },
+
+  itemRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 10,
+  },
+
+  foodImage: {
+    width: 50,
+    height: 50,
+    borderRadius: 10,
+    marginRight: 10,
+  },
+
+  foodName: {
     fontWeight: "bold",
+    color: ORANGE,
+  },
+
+  foodPrice: {
+    color: ORANGE,
+    fontSize: 12,
+  },
+
+  qty: {
+    fontWeight: "bold",
+  },
+
+  totalRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    borderTopWidth: 1,
+    marginTop: 10,
+    paddingTop: 10,
+  },
+
+  totalText: {
+    fontWeight: "bold",
+  },
+
+  totalAmount: {
+    fontWeight: "bold",
+  },
+
+  historyRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  historyImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 10,
+    marginRight: 10,
+  },
+
+  timeText: {
+    fontSize: 12,
+    color: "#777",
+  },
+
+  priceRight: {
+    color: ORANGE,
+    fontWeight: "bold",
+  },
+
+  completedBtn: {
+    backgroundColor: ORANGE,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 10,
+    marginTop: 5,
+  },
+
+  completedText: {
+    color: "#fff",
+    fontSize: 12,
   },
 });
