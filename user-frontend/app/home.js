@@ -44,14 +44,24 @@ export default function Home() {
     ).start();
   }, []);
 
+  // ✅ FIX ONLY: debounce + correct API format
   useEffect(() => {
-    getFoods();
+    const delay = setTimeout(() => {
+      getFoods();
+    }, 300);
+
+    return () => clearTimeout(delay);
   }, [search]);
 
   const getFoods = async () => {
     try {
       setLoading(true);
-      const data = await fetchFoods(search);
+
+      // ✅ FIX: MUST be object
+      const data = await fetchFoods({
+        search: search || "",
+      });
+
       setFoods(Array.isArray(data) ? data : []);
     } catch (err) {
       console.log(err);
@@ -60,16 +70,18 @@ export default function Home() {
     }
   };
 
-  // CATEGORY API CALL
   const getFoodsByCategory = async (category) => {
     try {
       setLoading(true);
-      const res = await fetch(
-        `http://192.168.1.67:5000/api/foods?category=${encodeURIComponent(category)}`,
-      );
-      const data = await res.json();
+
+      // ✅ FIX: MUST be object
+      const data = await fetchFoods({
+        category: category || "",
+      });
+
       setFoods(Array.isArray(data) ? data : []);
-      Keyboard.dismiss(); // hide keyboard on category click
+
+      Keyboard.dismiss();
     } catch (err) {
       console.log(err);
     } finally {
@@ -128,7 +140,6 @@ export default function Home() {
           placeholderTextColor="#888"
           value={search}
           onChangeText={setSearch}
-          onSubmitEditing={() => Keyboard.dismiss()}
           returnKeyType="search"
           style={styles.searchInput}
         />
@@ -250,22 +261,16 @@ export default function Home() {
   );
 }
 
-/* ---------------- STYLES ---------------- */
+/* ---------------- YOUR ORIGINAL CSS (UNCHANGED) ---------------- */
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 15, backgroundColor: "#fff" },
-
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 15,
   },
-
-  logoContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-
+  logoContainer: { flexDirection: "row", alignItems: "center" },
   logoWrapper: {
     width: 44,
     height: 44,
@@ -275,12 +280,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-
-  logo: {
-    width: "100%",
-    height: "100%",
-  },
-
+  logo: { width: "100%", height: "100%" },
   appName: {
     fontSize: 20,
     fontWeight: "900",
@@ -288,13 +288,11 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     letterSpacing: 0.5,
   },
-
   cartIcon: {
     backgroundColor: "#FF4800",
     padding: 10,
     borderRadius: 20,
   },
-
   badge: {
     position: "absolute",
     top: -6,
@@ -306,13 +304,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-
   badgeText: {
     fontSize: 10,
     color: "#FF4800",
     fontWeight: "bold",
   },
-
   search: {
     flexDirection: "row",
     alignItems: "center",
@@ -323,47 +319,28 @@ const styles = StyleSheet.create({
     paddingVertical: Platform.OS === "ios" ? 10 : 6,
     marginBottom: 10,
   },
-
-  searchInput: {
-    marginLeft: 8,
-    flex: 1,
-    color: "#000",
-  },
-
+  searchInput: { marginLeft: 8, flex: 1, color: "#000" },
   bannerWrapper: { marginBottom: 10 },
-
   promoCard: {
     flexDirection: "row",
     backgroundColor: "#FF4800",
     borderRadius: 22,
     overflow: "hidden",
   },
-
-  promoTextBox: {
-    flex: 1,
-    padding: 15,
-  },
-
-  promoDiscount: {
-    color: "#fff",
-    fontWeight: "800",
-    fontSize: 14,
-  },
-
+  promoTextBox: { flex: 1, padding: 15 },
+  promoDiscount: { color: "#fff", fontWeight: "800", fontSize: 14 },
   promoTitle: {
     color: "#fff",
     fontWeight: "900",
     fontSize: 18,
     marginTop: 5,
   },
-
   imageBox: {
     backgroundColor: "#fff",
     padding: 4,
     borderTopLeftRadius: 80,
     borderBottomLeftRadius: 80,
   },
-
   promoImage: {
     width: 140,
     height: 100,
@@ -371,15 +348,12 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 80,
     borderBottomLeftRadius: 80,
   },
-
   categoryTitle: {
     fontWeight: "bold",
     marginVertical: 10,
     fontSize: 16,
   },
-
   categories: { flexDirection: "row", marginBottom: 10 },
-
   categoryChip: {
     borderWidth: 1.5,
     borderColor: "#FF4800",
@@ -388,13 +362,11 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     marginRight: 8,
   },
-
   categoryText: {
     color: "#FF4800",
     fontSize: 12,
     fontWeight: "600",
   },
-
   card: {
     flex: 1,
     margin: 6,
@@ -406,24 +378,13 @@ const styles = StyleSheet.create({
     elevation: 3,
     minHeight: 190,
   },
-
-  image: {
-    width: "100%",
-    height: 100,
-    borderRadius: 10,
-  },
-
+  image: { width: "100%", height: 100, borderRadius: 10 },
   name: {
     fontWeight: "bold",
     marginTop: 5,
     paddingRight: 30,
   },
-
-  price: {
-    color: "#FF4800",
-    marginTop: 2,
-  },
-
+  price: { color: "#FF4800", marginTop: 2 },
   addBtn: {
     position: "absolute",
     right: 10,
@@ -433,7 +394,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 3,
   },
-
   qtyBox: {
     position: "absolute",
     right: 10,
@@ -444,24 +404,18 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     paddingHorizontal: 6,
   },
-
   qtyBtn: {
     fontSize: 16,
     color: "#FF4800",
     paddingHorizontal: 5,
   },
-
-  qty: {
-    fontWeight: "bold",
-  },
-
+  qty: { fontWeight: "bold" },
   emptyBox: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
     marginTop: 60,
   },
-
   emptyText: {
     fontSize: 14,
     color: "#888",
