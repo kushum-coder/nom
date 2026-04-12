@@ -1,6 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { useState } from "react";
 import {
   FlatList,
   Image,
@@ -12,43 +11,13 @@ import {
 } from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
-import { placeOrder } from "../api";
 import { useCart } from "../context/CartContext";
 
 export default function Cart() {
   const { cart, increaseQty, decreaseQty, getTotal } = useCart();
 
   const router = useRouter();
-  const [showPayment, setShowPayment] = useState(false);
-  const [loading, setLoading] = useState(false);
-
   const total = getTotal();
-
-  const handleOrder = async () => {
-    try {
-      if (!cart || cart.length === 0) {
-        alert("Your cart is empty");
-        return;
-      }
-
-      setLoading(true);
-
-      const items = cart.map((i) => ({
-        food: i._id || i.id,
-        quantity: i.quantity,
-      }));
-
-      await placeOrder(items, null);
-
-      alert("Order placed successfully");
-      router.push("/orders");
-    } catch (err) {
-      console.log(err);
-      alert("Something went wrong while placing order");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -92,7 +61,7 @@ export default function Cart() {
         )}
       />
 
-      {/* 🔥 FIXED TOTAL (ALWAYS ABOVE BUTTONS) */}
+      {/* TOTAL */}
       <View style={styles.totalWrap}>
         <Text style={styles.total}>Total Rs {total}</Text>
       </View>
@@ -106,30 +75,27 @@ export default function Cart() {
           <Text style={styles.secondaryText}>Add More</Text>
         </TouchableOpacity>
 
-        {!showPayment ? (
-          <TouchableOpacity
-            style={styles.primaryBtn}
-            onPress={() => setShowPayment(true)}
-          >
-            <Text style={styles.primaryText}>Payment</Text>
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity
-            style={styles.primaryBtn}
-            disabled={loading}
-            onPress={handleOrder}
-          >
-            <Text style={styles.primaryText}>
-              {loading ? "Placing..." : "Place Order"}
-            </Text>
-          </TouchableOpacity>
-        )}
+        {/* PAYMENT → CHECKOUT FIXED */}
+        <TouchableOpacity
+          style={styles.primaryBtn}
+          onPress={() =>
+            router.push({
+              pathname: "/checkout",
+              params: {
+                cart: JSON.stringify(cart),
+                total: getTotal(),
+              },
+            })
+          }
+        >
+          <Text style={styles.primaryText}>Payment</Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
 }
 
-/* ---------------- ONLY FIXED PART ---------------- */
+/* ---------------- STYLES (UNCHANGED) ---------------- */
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#fff" },
 
@@ -169,7 +135,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
 
-  /* ✅ THIS IS THE ONLY IMPORTANT FIX */
   totalWrap: {
     position: "absolute",
     bottom: Platform.OS === "ios" ? 95 : 90,
