@@ -1,4 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import {
   Alert,
@@ -9,71 +11,114 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { BASE_URL } from "../api";
+
+import { useCart } from "../context/CartContext";
 
 const PaymentPage = () => {
+  const router = useRouter();
+  const { clearCart } = useCart();
+
+  const { cart, total, city, street, landmark } = useLocalSearchParams();
+
   const [selectedMethod, setSelectedMethod] = useState("");
   const [showSuccess, setShowSuccess] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const esewaLogo = require("../assets/esewa.png");
   const khaltiLogo = require("../assets/khalti.png");
 
-  const billingItems = [
-    {
-      name: "Chicken Burger x1",
-      unitPrice: "Rs 220",
-      total: "Rs 220",
-    },
-    {
-      name: "Noodles x3",
-      unitPrice: "Rs. 180",
-      total: "Rs 540",
-    },
-  ];
+  const items = cart ? JSON.parse(cart) : [];
 
-  const paymentMethods = [
-    { id: "cod", label: "Cash On Delivery" },
-    { id: "esewa", label: "eSewa", logo: esewaLogo },
-    { id: "khalti", label: "Khalti", logo: khaltiLogo },
-  ];
-
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (!selectedMethod) {
       Alert.alert("Error", "Please select a payment method");
       return;
     }
-    setShowSuccess(true);
+
+    if (!items || items.length === 0) {
+      Alert.alert("Error", "Cart is empty");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const token = await AsyncStorage.getItem("token");
+
+      const res = await fetch(`${BASE_URL}/api/orders`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          items: items.map((i) => ({
+            food: i._id || i.id,
+            quantity: i.quantity || 1,
+          })),
+          city,
+          street,
+          landmark,
+          paymentMethod: selectedMethod,
+        }),
+      });
+
+      const text = await res.text();
+
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (e) {
+        throw new Error("Server error");
+      }
+
+      if (!res.ok) {
+        Alert.alert("Error", data.message || "Order failed");
+        return;
+      }
+
+      clearCart();
+      setShowSuccess(true);
+    } catch (err) {
+      Alert.alert("Error", err.message || "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleOkay = () => {
-    Alert.alert("Success", "Payment successful");
+    router.replace("/orders");
   };
 
   if (showSuccess) {
     return (
       <View style={styles.pageShell}>
         <View style={styles.frame}>
-          <View style={styles.header}>
+          {/* FIXED: LOWER HEADER + CLEAN WHITE BACKGROUND */}
+          <View style={[styles.header, { marginTop: 70 }]}>
             <TouchableOpacity
-              style={styles.backButton}
-              onPress={() => setShowSuccess(false)}
+              style={[styles.backButton, { marginTop: 15 }]}
+              onPress={() => router.replace("/orders")}
             >
               <Ionicons name="arrow-back" size={24} color="black" />
             </TouchableOpacity>
 
-            <Text style={styles.headerTitle}>Payment Confirmation</Text>
+            <Text style={[styles.headerTitle, { marginTop: 15 }]}>
+              Payment Confirmation
+            </Text>
           </View>
 
-          <View style={styles.successPanel}>
-            <View style={styles.successIcon}>
-              <Ionicons name="checkmark-circle" size={64} color="green" />
-            </View>
+          {/* FIXED: REMOVE BOX LOOK COMPLETELY */}
+          <View style={[styles.successContainer, { backgroundColor: "#fff" }]}>
+            <Ionicons name="checkmark-circle" size={75} color="green" />
 
             <Text style={styles.successText}>
-              Your Payment was{"\n"}successful.
+              Your Order was{"\n"}successful.
             </Text>
 
             <TouchableOpacity style={styles.okButton} onPress={handleOkay}>
-              <Text style={styles.okText}>Okay</Text>
+              <Text style={styles.okText}>Go to Orders</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -85,73 +130,100 @@ const PaymentPage = () => {
     <View style={styles.pageShell}>
       <View style={styles.frame}>
         <View style={styles.header}>
-          <TouchableOpacity style={styles.backButton}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={styles.backButton}
+          >
             <Ionicons name="arrow-back" size={24} color="black" />
           </TouchableOpacity>
 
           <Text style={styles.headerTitle}>Payment</Text>
         </View>
 
-        <ScrollView showsVerticalScrollIndicator={false}>
-          {/* BILLING */}
+        <ScrollView>
           <View style={styles.card}>
             <Text style={styles.sectionTitle}>Billings</Text>
 
-            {billingItems.map((item, index) => (
+            {items.map((item, index) => (
               <View key={index}>
                 <View style={styles.row}>
                   <View>
                     <Text style={styles.itemName}>{item.name}</Text>
-                    <Text style={styles.itemPrice}>{item.unitPrice}</Text>
+                    <Text style={styles.itemPrice}>Rs {item.price}</Text>
                   </View>
 
-                  <Text style={styles.itemTotal}>{item.total}</Text>
+                  <Text style={styles.itemTotal}>
+                    Rs {(item.price || 0) * (item.quantity || 1)}
+                  </Text>
                 </View>
 
-                {index !== billingItems.length - 1 && (
-                  <View style={styles.divider} />
-                )}
+                {index !== items.length - 1 && <View style={styles.divider} />}
               </View>
             ))}
 
             <View style={styles.totalRow}>
               <Text>Total</Text>
-              <Text>Rs 760</Text>
+              <Text>Rs {total}</Text>
             </View>
           </View>
 
-          {/* PAYMENT METHODS */}
           <View style={styles.card}>
             <Text style={styles.sectionTitle}>Payment Method</Text>
 
-            {paymentMethods.map((method) => (
-              <TouchableOpacity
-                key={method.id}
-                style={[
-                  styles.methodBox,
-                  selectedMethod === method.id && styles.selectedBox,
-                ]}
-                onPress={() => setSelectedMethod(method.id)}
-              >
-                <View style={styles.radioBox}>
-                  {selectedMethod === method.id && (
-                    <View style={styles.radioInner} />
-                  )}
-                </View>
+            <TouchableOpacity
+              style={[
+                styles.methodBox,
+                selectedMethod === "cod" && styles.selectedBox,
+              ]}
+              onPress={() => setSelectedMethod("cod")}
+            >
+              <View style={styles.radioBox}>
+                {selectedMethod === "cod" && <View style={styles.radioInner} />}
+              </View>
 
-                {method.logo ? (
-                  <View style={styles.methodRow}>
-                    <Image source={method.logo} style={styles.logo} />
-                    <Text style={styles.methodText}>{method.label}</Text>
-                  </View>
-                ) : (
-                  <Text style={styles.methodText}>{method.label}</Text>
+              <Text style={styles.methodText}>Cash On Delivery</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.methodBox,
+                selectedMethod === "esewa" && styles.selectedBox,
+              ]}
+              onPress={() => setSelectedMethod("esewa")}
+            >
+              <View style={styles.radioBox}>
+                {selectedMethod === "esewa" && (
+                  <View style={styles.radioInner} />
                 )}
-              </TouchableOpacity>
-            ))}
+              </View>
 
-            <TouchableOpacity style={styles.confirmBtn} onPress={handleConfirm}>
-              <Text style={styles.confirmText}>Confirm</Text>
+              <Image source={esewaLogo} style={styles.logo} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.methodBox,
+                selectedMethod === "khalti" && styles.selectedBox,
+              ]}
+              onPress={() => setSelectedMethod("khalti")}
+            >
+              <View style={styles.radioBox}>
+                {selectedMethod === "khalti" && (
+                  <View style={styles.radioInner} />
+                )}
+              </View>
+
+              <Image source={khaltiLogo} style={styles.logo} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.confirmBtn}
+              onPress={handleConfirm}
+              disabled={loading}
+            >
+              <Text style={styles.confirmText}>
+                {loading ? "Placing Order..." : "Confirm"}
+              </Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -162,11 +234,10 @@ const PaymentPage = () => {
 
 export default PaymentPage;
 
-/* ---------------- STYLES ---------------- */
 const styles = StyleSheet.create({
   pageShell: {
     flex: 1,
-    backgroundColor: "#efefef",
+    backgroundColor: "#fff", // FIXED: removed grey background
     justifyContent: "center",
     alignItems: "center",
     padding: 10,
@@ -175,14 +246,14 @@ const styles = StyleSheet.create({
   frame: {
     flex: 1,
     width: "100%",
-    backgroundColor: "#dddddd",
+    backgroundColor: "#fff", // FIXED: removed box feel
     padding: 20,
   },
 
   header: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 20,
+    marginBottom: 15,
   },
 
   backButton: {
@@ -204,11 +275,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
 
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 10,
-  },
+  sectionTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 10 },
 
   row: {
     flexDirection: "row",
@@ -216,32 +283,16 @@ const styles = StyleSheet.create({
     marginVertical: 8,
   },
 
-  itemName: {
-    fontSize: 16,
-    fontWeight: "500",
-  },
+  itemName: { fontSize: 16, fontWeight: "500" },
+  itemPrice: { fontSize: 14, color: "#555" },
+  itemTotal: { fontSize: 15, fontWeight: "500" },
 
-  itemPrice: {
-    fontSize: 14,
-    color: "#555",
-  },
-
-  itemTotal: {
-    fontSize: 15,
-    fontWeight: "500",
-  },
-
-  divider: {
-    height: 1,
-    backgroundColor: "#ccc",
-    marginVertical: 5,
-  },
+  divider: { height: 1, backgroundColor: "#ccc", marginVertical: 5 },
 
   totalRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginTop: 10,
-    fontWeight: "bold",
   },
 
   methodBox: {
@@ -253,11 +304,10 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 10,
     backgroundColor: "#fff",
+    height: 60,
   },
 
-  selectedBox: {
-    borderColor: "#ff5a00",
-  },
+  selectedBox: { borderColor: "#ff5a00" },
 
   radioBox: {
     width: 20,
@@ -276,20 +326,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#ff5a00",
   },
 
-  methodRow: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
+  methodText: { fontSize: 16 },
 
   logo: {
-    width: 40,
-    height: 40,
+    width: 45,
+    height: 45,
     resizeMode: "contain",
-    marginRight: 10,
-  },
-
-  methodText: {
-    fontSize: 16,
   },
 
   confirmBtn: {
@@ -306,20 +348,17 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
 
-  successPanel: {
+  successContainer: {
+    flex: 1,
+    justifyContent: "center",
     alignItems: "center",
-    marginTop: 50,
-  },
-
-  successIcon: {
-    marginBottom: 20,
   },
 
   successText: {
     fontSize: 22,
     textAlign: "center",
     fontWeight: "bold",
-    marginBottom: 20,
+    marginVertical: 20,
   },
 
   okButton: {
@@ -329,9 +368,5 @@ const styles = StyleSheet.create({
     width: "100%",
   },
 
-  okText: {
-    color: "#fff",
-    textAlign: "center",
-    fontSize: 18,
-  },
+  okText: { color: "#fff", textAlign: "center", fontSize: 18 },
 });

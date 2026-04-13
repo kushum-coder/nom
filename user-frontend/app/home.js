@@ -25,7 +25,7 @@ export default function Home() {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
 
-  const [selectedCategory, setSelectedCategory] = useState(""); // ✅ NEW
+  const [selectedCategory, setSelectedCategory] = useState("");
 
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
@@ -63,7 +63,7 @@ export default function Home() {
       });
 
       setFoods(Array.isArray(data) ? data : []);
-      setSelectedCategory(""); // ✅ reset highlight on search
+      setSelectedCategory("");
     } catch (err) {
       console.log(err);
     } finally {
@@ -80,7 +80,7 @@ export default function Home() {
       });
 
       setFoods(Array.isArray(data) ? data : []);
-      setSelectedCategory(category); // ✅ highlight
+      setSelectedCategory(category);
 
       Keyboard.dismiss();
     } catch (err) {
@@ -108,7 +108,7 @@ export default function Home() {
         <View style={styles.logoContainer}>
           <View style={styles.logoWrapper}>
             <Animated.Image
-              source={require("../assets/nom1.png")} // ✅ CHANGED
+              source={require("../assets/nom1.png")}
               style={[styles.logo, { transform: [{ scale: scaleAnim }] }]}
               resizeMode="cover"
             />
@@ -172,16 +172,13 @@ export default function Home() {
           return (
             <TouchableOpacity
               key={c}
-              style={[
-                styles.categoryChip,
-                isActive && styles.activeCategory, // ✅ highlight
-              ]}
+              style={[styles.categoryChip, isActive && styles.activeCategory]}
               onPress={() => getFoodsByCategory(c)}
             >
               <Text
                 style={[
                   styles.categoryText,
-                  isActive && styles.activeCategoryText, // ✅ highlight text
+                  isActive && styles.activeCategoryText,
                 ]}
               >
                 {c}
@@ -214,9 +211,13 @@ export default function Home() {
           renderItem={({ item }) => {
             const qty = getQty(item._id);
 
+            // ✅ FIXED: backend field is "availability"
+            const isAvailable = item?.availability !== false;
+
             return (
               <View style={styles.card}>
                 <TouchableOpacity
+                  disabled={!isAvailable}
                   onPress={() =>
                     router.push({
                       pathname: "/foodDetail",
@@ -236,7 +237,7 @@ export default function Home() {
                         ? { uri: item.image }
                         : require("../assets/images/food-placeholder.jpg")
                     }
-                    style={styles.image}
+                    style={[styles.image, !isAvailable && { opacity: 0.5 }]}
                   />
 
                   <Text style={styles.name} numberOfLines={2}>
@@ -244,28 +245,43 @@ export default function Home() {
                   </Text>
 
                   <Text style={styles.price}>Rs {item.price}</Text>
+
+                  {!isAvailable && (
+                    <Text
+                      style={{
+                        color: "red",
+                        fontWeight: "bold",
+                        marginTop: 4,
+                      }}
+                    >
+                      Out of Stock
+                    </Text>
+                  )}
                 </TouchableOpacity>
 
-                {qty === 0 ? (
-                  <TouchableOpacity
-                    style={styles.addBtn}
-                    onPress={() => addToCart(item)}
-                  >
-                    <Text style={{ color: "#fff", fontWeight: "bold" }}>+</Text>
-                  </TouchableOpacity>
-                ) : (
-                  <View style={styles.qtyBox}>
-                    <TouchableOpacity onPress={() => decreaseQty(item._id)}>
-                      <Text style={styles.qtyBtn}>-</Text>
+                {isAvailable &&
+                  (qty === 0 ? (
+                    <TouchableOpacity
+                      style={styles.addBtn}
+                      onPress={() => addToCart(item)}
+                    >
+                      <Text style={{ color: "#fff", fontWeight: "bold" }}>
+                        +
+                      </Text>
                     </TouchableOpacity>
+                  ) : (
+                    <View style={styles.qtyBox}>
+                      <TouchableOpacity onPress={() => decreaseQty(item._id)}>
+                        <Text style={styles.qtyBtn}>-</Text>
+                      </TouchableOpacity>
 
-                    <Text style={styles.qty}>{qty}</Text>
+                      <Text style={styles.qty}>{qty}</Text>
 
-                    <TouchableOpacity onPress={() => increaseQty(item._id)}>
-                      <Text style={styles.qtyBtn}>+</Text>
-                    </TouchableOpacity>
-                  </View>
-                )}
+                      <TouchableOpacity onPress={() => increaseQty(item._id)}>
+                        <Text style={styles.qtyBtn}>+</Text>
+                      </TouchableOpacity>
+                    </View>
+                  ))}
               </View>
             );
           }}
@@ -275,7 +291,7 @@ export default function Home() {
   );
 }
 
-/* ---------------- STYLES ---------------- */
+/* STYLES (UNCHANGED) */
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 15, backgroundColor: "#fff" },
   header: {
@@ -302,15 +318,8 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     letterSpacing: 0.5,
   },
-
-  /* ✅ NEW styles */
-  activeCategory: {
-    backgroundColor: "#FF4800",
-  },
-  activeCategoryText: {
-    color: "#fff",
-  },
-
+  activeCategory: { backgroundColor: "#FF4800" },
+  activeCategoryText: { color: "#fff" },
   cartIcon: {
     backgroundColor: "#FF4800",
     padding: 10,

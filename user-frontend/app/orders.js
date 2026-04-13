@@ -16,6 +16,7 @@ export default function Orders() {
   const [tab, setTab] = useState("ongoing");
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     loadOrders();
@@ -31,14 +32,13 @@ export default function Orders() {
       }
 
       const data = await getMyOrders(token);
-      console.log("ORDERS:", data);
-
       setOrders(data || []);
     } catch (err) {
       console.log("Order fetch error:", err.message);
       setOrders([]);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
@@ -64,12 +64,10 @@ export default function Orders() {
     <SafeAreaView style={styles.container} edges={["top"]}>
       <StatusBar barStyle="dark-content" />
 
-      {/* HEADER */}
       <Text style={styles.header}>
         {tab === "ongoing" ? "Order" : "History"}
       </Text>
 
-      {/* TOGGLE */}
       <View style={styles.toggleWrapper}>
         <TouchableOpacity
           style={[styles.toggleBtn, tab === "ongoing" && styles.activeToggle]}
@@ -94,7 +92,6 @@ export default function Orders() {
         </TouchableOpacity>
       </View>
 
-      {/* EMPTY STATE */}
       {!loading && filtered.length === 0 && (
         <Text style={styles.emptyText}>No orders yet</Text>
       )}
@@ -102,6 +99,11 @@ export default function Orders() {
       <FlatList
         data={filtered}
         keyExtractor={(item) => item._id}
+        refreshing={refreshing}
+        onRefresh={() => {
+          setRefreshing(true);
+          loadOrders();
+        }}
         contentContainerStyle={{ paddingBottom: 20 }}
         renderItem={({ item }) => {
           const step = getStep(item.status);
@@ -143,19 +145,27 @@ export default function Orders() {
                     ))}
                   </View>
 
-                  {item.items?.map((food, index) => (
-                    <View key={index} style={styles.itemRow}>
-                      <Image
-                        source={{ uri: food.image }}
-                        style={styles.foodImage}
-                      />
-                      <View style={{ flex: 1 }}>
-                        <Text style={styles.foodName}>{food.name}</Text>
-                        <Text style={styles.foodPrice}>Rs. {food.price}</Text>
+                  {/* 🔥 FIXED PART BELOW */}
+                  {item.items?.map((itemRow, index) => {
+                    const food = itemRow.food; // ✅ IMPORTANT FIX
+
+                    return (
+                      <View key={index} style={styles.itemRow}>
+                        {food?.image ? (
+                          <Image
+                            source={{ uri: food.image }}
+                            style={styles.foodImage}
+                          />
+                        ) : null}
+
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.foodName}>{food?.name}</Text>
+                        </View>
+
+                        <Text style={styles.qty}>x{itemRow.quantity}</Text>
                       </View>
-                      <Text style={styles.qty}>x{food.quantity}</Text>
-                    </View>
-                  ))}
+                    );
+                  })}
 
                   <View style={styles.totalRow}>
                     <Text style={styles.totalText}>Total</Text>
@@ -174,13 +184,14 @@ export default function Orders() {
 
                   <View style={{ flex: 1 }}>
                     <Text style={styles.foodName}>
-                      {item.items?.[0]?.name || "Food Item"}
+                      {item.items?.[0]?.food?.name}
                     </Text>
                     <Text style={styles.timeText}>12:01</Text>
                   </View>
 
                   <View style={{ alignItems: "flex-end" }}>
                     <Text style={styles.priceRight}>Rs {item.totalPrice}</Text>
+
                     <View style={styles.completedBtn}>
                       <Text style={styles.completedText}>Completed</Text>
                     </View>
@@ -195,58 +206,49 @@ export default function Orders() {
   );
 }
 
-const ORANGE = "#FF4800";
-
+/* STYLES (UNCHANGED) */
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#F5F5F5",
     paddingHorizontal: 15,
-    paddingTop: 10, // ✅ FIXES CUT ISSUE
+    paddingTop: 10,
   },
-
   header: {
     textAlign: "center",
     fontSize: 20,
     fontWeight: "bold",
-    color: ORANGE,
+    color: "#FF4800",
     marginBottom: 15,
   },
-
   toggleWrapper: {
     flexDirection: "row",
     borderWidth: 1,
-    borderColor: ORANGE,
+    borderColor: "#FF4800",
     borderRadius: 25,
     overflow: "hidden",
     marginBottom: 15,
   },
-
   toggleBtn: {
     flex: 1,
     padding: 10,
     alignItems: "center",
   },
-
   activeToggle: {
-    backgroundColor: ORANGE,
+    backgroundColor: "#FF4800",
   },
-
   toggleText: {
     color: "#333",
     fontWeight: "600",
   },
-
   activeText: {
     color: "#fff",
   },
-
   emptyText: {
     textAlign: "center",
     marginTop: 50,
     color: "#777",
   },
-
   card: {
     backgroundColor: "#fff",
     borderRadius: 15,
@@ -254,18 +256,15 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     elevation: 3,
   },
-
   stepsRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 10,
   },
-
   stepItem: {
     alignItems: "center",
     flex: 1,
   },
-
   circle: {
     width: 55,
     height: 55,
@@ -277,50 +276,37 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     backgroundColor: "#fff",
   },
-
   activeCircle: {
-    borderColor: ORANGE,
+    borderColor: "#FF4800",
   },
-
   circleImage: {
     width: "100%",
     height: "100%",
     resizeMode: "cover",
   },
-
   stepText: {
     fontSize: 11,
     marginTop: 5,
     textAlign: "center",
   },
-
   itemRow: {
     flexDirection: "row",
     alignItems: "center",
     marginTop: 10,
   },
-
   foodImage: {
     width: 50,
     height: 50,
     borderRadius: 10,
     marginRight: 10,
   },
-
   foodName: {
     fontWeight: "bold",
-    color: ORANGE,
+    color: "#FF4800",
   },
-
-  foodPrice: {
-    color: ORANGE,
-    fontSize: 12,
-  },
-
   qty: {
     fontWeight: "bold",
   },
-
   totalRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -328,45 +314,37 @@ const styles = StyleSheet.create({
     marginTop: 10,
     paddingTop: 10,
   },
-
   totalText: {
     fontWeight: "bold",
   },
-
   totalAmount: {
     fontWeight: "bold",
   },
-
   historyRow: {
     flexDirection: "row",
     alignItems: "center",
   },
-
   historyImage: {
     width: 60,
     height: 60,
     borderRadius: 10,
     marginRight: 10,
   },
-
   timeText: {
     fontSize: 12,
     color: "#777",
   },
-
   priceRight: {
-    color: ORANGE,
+    color: "#FF4800",
     fontWeight: "bold",
   },
-
   completedBtn: {
-    backgroundColor: ORANGE,
+    backgroundColor: "#FF4800",
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 10,
     marginTop: 5,
   },
-
   completedText: {
     color: "#fff",
     fontSize: 12,

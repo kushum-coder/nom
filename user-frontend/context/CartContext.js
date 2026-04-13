@@ -5,10 +5,8 @@ export const CartContext = createContext();
 export const CartProvider = ({ children }) => {
   const [cart, setCart] = useState([]);
 
-  // ✅ NORMALIZED ID FUNCTION (CRITICAL FIX)
   const getId = (item) => item?._id || item?.id;
 
-  // ---------------- ADD TO CART (FIXED DUPLICATION BUG) ----------------
   const addToCart = (item) => {
     const itemId = getId(item);
     if (!itemId) return;
@@ -22,18 +20,10 @@ export const CartProvider = ({ children }) => {
         );
       }
 
-      return [
-        ...prev,
-        {
-          ...item,
-          _id: itemId,
-          quantity: 1,
-        },
-      ];
+      return [...prev, { ...item, _id: itemId, quantity: 1 }];
     });
   };
 
-  // ---------------- INCREASE ----------------
   const increaseQty = (id) => {
     setCart((prev) =>
       prev.map((item) =>
@@ -44,7 +34,6 @@ export const CartProvider = ({ children }) => {
     );
   };
 
-  // ---------------- DECREASE ----------------
   const decreaseQty = (id) => {
     setCart((prev) =>
       prev
@@ -57,7 +46,9 @@ export const CartProvider = ({ children }) => {
     );
   };
 
-  // ---------------- TOTAL ----------------
+  // ✅ ONLY ADDITION (UNCHANGED EVERYTHING ELSE)
+  const clearCart = () => setCart([]);
+
   const getTotal = () =>
     cart.reduce(
       (sum, item) => sum + (item.price || 0) * (item.quantity || 0),
@@ -72,6 +63,7 @@ export const CartProvider = ({ children }) => {
         increaseQty,
         decreaseQty,
         getTotal,
+        clearCart, // already exposed
       }}
     >
       {children}

@@ -7,6 +7,7 @@ import {
   Keyboard,
   KeyboardAvoidingView,
   Platform,
+  ScrollView, // ✅ ADDED
   StyleSheet,
   Text,
   TextInput,
@@ -41,7 +42,6 @@ export default function Checkout() {
 
     alert("Order placed successfully!");
 
-    // ✅ ADDED ONLY NAVIGATION (IMPORTANT FIX)
     router.push({
       pathname: "/PaymentPage",
       params: {
@@ -57,78 +57,88 @@ export default function Checkout() {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <View style={styles.container}>
-          <View style={styles.header}>
+        {/* ✅ SCROLLVIEW ADDED */}
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1 }}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.container}>
+            <View style={styles.header}>
+              <TouchableOpacity
+                onPress={() => router.back()}
+                style={styles.backBtn}
+              >
+                <Ionicons name="arrow-back" size={28} color="#FF4800" />
+              </TouchableOpacity>
+
+              <Text style={styles.title}>Your Cart Food</Text>
+            </View>
+
+            {/* ✅ DISABLED INTERNAL SCROLL */}
+            <FlatList
+              data={items}
+              scrollEnabled={false} // 👈 IMPORTANT FIX
+              keyExtractor={(item, index) => (item._id || item.id) + index}
+              renderItem={({ item }) => (
+                <View style={styles.card}>
+                  <Image source={{ uri: item.image }} style={styles.image} />
+
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.name}>{item.name}</Text>
+                    <Text style={styles.price}>Rs {item.price}</Text>
+                  </View>
+
+                  <Text style={styles.qty}>x{item.quantity}</Text>
+                </View>
+              )}
+            />
+
+            <View style={styles.totalBox}>
+              <Text style={styles.totalText}>Total</Text>
+              <Text style={styles.totalValue}>Rs {total}</Text>
+            </View>
+
+            <View style={styles.deliveryBox}>
+              <Text style={styles.deliveryTitle}>Delivery Details</Text>
+
+              <TextInput
+                style={styles.input}
+                placeholder="City"
+                placeholderTextColor="#888"
+                value={city}
+                onChangeText={setCity}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Street"
+                placeholderTextColor="#888"
+                value={street}
+                onChangeText={setStreet}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Notable Landmark"
+                placeholderTextColor="#888"
+                value={landmark}
+                onChangeText={setLandmark}
+              />
+            </View>
+
             <TouchableOpacity
-              onPress={() => router.back()}
-              style={styles.backBtn}
+              style={styles.placeBtn}
+              onPress={handlePlaceOrder}
             >
-              <Ionicons name="arrow-back" size={28} color="#FF4800" />
+              <Text style={styles.placeText}>Place Order</Text>
             </TouchableOpacity>
 
-            <Text style={styles.title}>Your Cart Food</Text>
+            <TouchableOpacity
+              style={styles.cancelBtn}
+              onPress={() => router.replace("/home")}
+            >
+              <Text style={styles.cancelText}>Cancel Order</Text>
+            </TouchableOpacity>
           </View>
-
-          <FlatList
-            data={items}
-            keyboardShouldPersistTaps="handled"
-            keyExtractor={(item, index) => (item._id || item.id) + index}
-            renderItem={({ item }) => (
-              <View style={styles.card}>
-                <Image source={{ uri: item.image }} style={styles.image} />
-
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.name}>{item.name}</Text>
-                  <Text style={styles.price}>Rs {item.price}</Text>
-                </View>
-
-                <Text style={styles.qty}>x{item.quantity}</Text>
-              </View>
-            )}
-          />
-
-          <View style={styles.totalBox}>
-            <Text style={styles.totalText}>Total</Text>
-            <Text style={styles.totalValue}>Rs {total}</Text>
-          </View>
-
-          <View style={styles.deliveryBox}>
-            <Text style={styles.deliveryTitle}>Delivery Details</Text>
-
-            <TextInput
-              style={styles.input}
-              placeholder="City"
-              placeholderTextColor="#888"
-              value={city}
-              onChangeText={setCity}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Street"
-              placeholderTextColor="#888"
-              value={street}
-              onChangeText={setStreet}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Notable Landmark"
-              placeholderTextColor="#888"
-              value={landmark}
-              onChangeText={setLandmark}
-            />
-          </View>
-
-          <TouchableOpacity style={styles.placeBtn} onPress={handlePlaceOrder}>
-            <Text style={styles.placeText}>Place Order</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.cancelBtn}
-            onPress={() => router.back()}
-          >
-            <Text style={styles.cancelText}>Cancel Order</Text>
-          </TouchableOpacity>
-        </View>
+        </ScrollView>
       </TouchableWithoutFeedback>
     </KeyboardAvoidingView>
   );

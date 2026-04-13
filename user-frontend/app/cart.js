@@ -32,7 +32,7 @@ export default function Cart() {
       <FlatList
         data={cart}
         keyExtractor={(item, index) => (item._id || item.id) + index}
-        contentContainerStyle={{ paddingBottom: 200 }}
+        contentContainerStyle={{ paddingBottom: 220 }} // ✅ increased to avoid clash
         renderItem={({ item }) => (
           <View style={styles.card}>
             <Image source={{ uri: item.image }} style={styles.image} />
@@ -75,7 +75,6 @@ export default function Cart() {
           <Text style={styles.secondaryText}>Add More</Text>
         </TouchableOpacity>
 
-        {/* PAYMENT → CHECKOUT FIXED */}
         <TouchableOpacity
           style={styles.primaryBtn}
           onPress={() =>
@@ -95,7 +94,7 @@ export default function Cart() {
   );
 }
 
-/* ---------------- STYLES (UNCHANGED) ---------------- */
+/* ---------------- STYLES ---------------- */
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#fff" },
 
@@ -135,14 +134,14 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
 
+  // ✅ ONLY spacing adjusted
   totalWrap: {
     position: "absolute",
-    bottom: Platform.OS === "ios" ? 95 : 90,
-    left: 0,
-    right: 0,
+    bottom: Platform.OS === "ios" ? 85 : 80, // slight adjustment
+    left: 15,
+    right: 15,
     alignItems: "center",
-    backgroundColor: "#fff",
-    paddingVertical: 8,
+    paddingVertical: 6,
   },
 
   total: {

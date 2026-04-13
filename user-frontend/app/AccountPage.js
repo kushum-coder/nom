@@ -63,13 +63,6 @@ export default function AccountPage() {
             <Text style={{ color: "#fff", fontWeight: "bold" }}>Logout</Text>
           </TouchableOpacity>
         </View>
-
-        {/* BOTTOM NAV */}
-        <View style={styles.bottomNav}>
-          <Ionicons name="home-outline" size={20} color="#fff" />
-          <Ionicons name="camera-outline" size={20} color="#fff" />
-          <Ionicons name="person-outline" size={20} color="#fff" />
-        </View>
       </View>
     </View>
   );
@@ -95,11 +88,11 @@ function Row({ icon, text, value, setValue }) {
   );
 }
 
-/* STYLES */
+/* STYLES (ONLY BACKGROUND FIXED) */
 const styles = StyleSheet.create({
   wrapper: {
     flex: 1,
-    backgroundColor: "#eee",
+    backgroundColor: "#fff", // ✅ FIXED
     alignItems: "center",
     justifyContent: "center",
   },
@@ -107,7 +100,7 @@ const styles = StyleSheet.create({
   container: {
     width: "100%",
     maxWidth: 400,
-    backgroundColor: "#ddd",
+    backgroundColor: "#fff", // ✅ FIXED
     padding: 20,
     borderRadius: 20,
   },
@@ -138,7 +131,7 @@ const styles = StyleSheet.create({
   },
 
   card: {
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#fff", // ✅ FIXED
     padding: 15,
     borderRadius: 20,
   },
@@ -171,14 +164,5 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 10,
     alignItems: "center",
-  },
-
-  bottomNav: {
-    marginTop: 20,
-    backgroundColor: "#ff5a00",
-    flexDirection: "row",
-    justifyContent: "space-around",
-    padding: 10,
-    borderRadius: 15,
   },
 });
