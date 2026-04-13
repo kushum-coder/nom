@@ -25,6 +25,8 @@ export default function Home() {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
 
+  const [selectedCategory, setSelectedCategory] = useState(""); // ✅ NEW
+
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
@@ -44,7 +46,6 @@ export default function Home() {
     ).start();
   }, []);
 
-  // ✅ FIX ONLY: debounce + correct API format
   useEffect(() => {
     const delay = setTimeout(() => {
       getFoods();
@@ -57,12 +58,12 @@ export default function Home() {
     try {
       setLoading(true);
 
-      // ✅ FIX: MUST be object
       const data = await fetchFoods({
         search: search || "",
       });
 
       setFoods(Array.isArray(data) ? data : []);
+      setSelectedCategory(""); // ✅ reset highlight on search
     } catch (err) {
       console.log(err);
     } finally {
@@ -74,12 +75,12 @@ export default function Home() {
     try {
       setLoading(true);
 
-      // ✅ FIX: MUST be object
       const data = await fetchFoods({
         category: category || "",
       });
 
       setFoods(Array.isArray(data) ? data : []);
+      setSelectedCategory(category); // ✅ highlight
 
       Keyboard.dismiss();
     } catch (err) {
@@ -107,7 +108,7 @@ export default function Home() {
         <View style={styles.logoContainer}>
           <View style={styles.logoWrapper}>
             <Animated.Image
-              source={require("../assets/images/logo2.png")}
+              source={require("../assets/nom1.png")} // ✅ CHANGED
               style={[styles.logo, { transform: [{ scale: scaleAnim }] }]}
               resizeMode="cover"
             />
@@ -165,18 +166,31 @@ export default function Home() {
       {/* CATEGORY */}
       <Text style={styles.categoryTitle}>Categories</Text>
       <View style={styles.categories}>
-        {["Fast Food", "Grocery", "Desserts", "Drinks"].map((c) => (
-          <TouchableOpacity
-            key={c}
-            style={styles.categoryChip}
-            onPress={() => getFoodsByCategory(c)}
-          >
-            <Text style={styles.categoryText}>{c}</Text>
-          </TouchableOpacity>
-        ))}
+        {["Fast Food", "Grocery", "Desserts", "Drinks"].map((c) => {
+          const isActive = selectedCategory === c;
+
+          return (
+            <TouchableOpacity
+              key={c}
+              style={[
+                styles.categoryChip,
+                isActive && styles.activeCategory, // ✅ highlight
+              ]}
+              onPress={() => getFoodsByCategory(c)}
+            >
+              <Text
+                style={[
+                  styles.categoryText,
+                  isActive && styles.activeCategoryText, // ✅ highlight text
+                ]}
+              >
+                {c}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
       </View>
 
-      {/* EMPTY STATE */}
       {!loading && foods.length === 0 ? (
         <View style={styles.emptyBox}>
           <Text style={styles.emptyText}>
@@ -261,7 +275,7 @@ export default function Home() {
   );
 }
 
-/* ---------------- YOUR ORIGINAL CSS (UNCHANGED) ---------------- */
+/* ---------------- STYLES ---------------- */
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 15, backgroundColor: "#fff" },
   header: {
@@ -288,6 +302,15 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     letterSpacing: 0.5,
   },
+
+  /* ✅ NEW styles */
+  activeCategory: {
+    backgroundColor: "#FF4800",
+  },
+  activeCategoryText: {
+    color: "#fff",
+  },
+
   cartIcon: {
     backgroundColor: "#FF4800",
     padding: 10,

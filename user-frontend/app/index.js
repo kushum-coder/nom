@@ -1,5 +1,4 @@
 import { Ionicons } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
@@ -23,7 +22,6 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [secure, setSecure] = useState(true);
   const [loading, setLoading] = useState(false);
-  const [remember, setRemember] = useState(false);
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
@@ -40,7 +38,6 @@ export default function Login() {
         return;
       }
 
-      if (remember) await AsyncStorage.setItem("token", data.token);
       if (saveToken) await saveToken(data.token);
 
       router.replace("/home");
@@ -57,6 +54,7 @@ export default function Login() {
       style={{ flex: 1 }}
     >
       <ScrollView
+        style={{ flex: 1 }} // ✅ FIX: prevents white gap
         contentContainerStyle={styles.container}
         keyboardShouldPersistTaps="handled"
       >
@@ -103,17 +101,6 @@ export default function Login() {
 
           <View style={styles.rowBetween}>
             <TouchableOpacity
-              style={styles.rememberContainer}
-              onPress={() => setRemember(!remember)}
-            >
-              <View style={styles.tickBox}>
-                {remember && <Text style={styles.checkMark}>✓</Text>}
-              </View>
-              <Text style={styles.rememberText}>Remember Me</Text>
-            </TouchableOpacity>
-
-            {/* ✅ ONLY CHANGE IS HERE */}
-            <TouchableOpacity
               onPress={() => router.push("/auth/forgotPassword")}
             >
               <Text style={styles.forgotText}>Forgot Password?</Text>
@@ -147,8 +134,9 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     backgroundColor: "#FFBD31",
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "space-between", // ✅ FIX: removes bottom white space
     padding: 20,
+    paddingBottom: 40, // ✅ extra safety for bottom spacing
   },
 
   card: {
@@ -204,29 +192,11 @@ const styles = StyleSheet.create({
 
   rowBetween: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "flex-end",
     alignItems: "center",
     width: "100%",
     marginBottom: 15,
   },
-
-  rememberContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-
-  tickBox: {
-    width: 18,
-    height: 18,
-    borderWidth: 1,
-    borderColor: "#000",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  checkMark: { fontSize: 12, color: "#000" },
-
-  rememberText: { marginLeft: 8 },
 
   button: {
     width: "100%",

@@ -77,9 +77,8 @@ export default function Signup() {
         confirm: trimmedConfirm,
       });
 
-      // Handle backend error messages gracefully
       if (data?.message && !data?.token) {
-        alert(data.message); // shows "User already exists" or other backend messages
+        alert(data.message);
         return;
       }
 
@@ -92,7 +91,6 @@ export default function Signup() {
 
       router.replace("/");
     } catch (err) {
-      // Handle non-JSON or network errors
       console.error("Signup error:", err);
       if (err?.message) {
         alert(err.message);
@@ -110,6 +108,7 @@ export default function Signup() {
       style={{ flex: 1 }}
     >
       <ScrollView
+        style={{ flex: 1 }} // ✅ FIX
         contentContainerStyle={styles.container}
         keyboardShouldPersistTaps="handled"
       >
@@ -223,8 +222,9 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     backgroundColor: "#FFBD31",
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "space-between", // ✅ FIX
     padding: 20,
+    paddingBottom: 40, // ✅ FIX
   },
 
   card: {

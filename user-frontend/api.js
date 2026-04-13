@@ -1,4 +1,4 @@
-export const BASE_URL = "http://192.168.1.67:5000"; // Update if your IP changes
+export const BASE_URL = "http://192.168.1.66:5000"; // Update if your IP changes
 
 // ---------------- HELPER TO HANDLE JSON OR NON-JSON RESPONSES ----------------
 const safeFetchJson = async (url, options) => {

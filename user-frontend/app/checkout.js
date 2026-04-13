@@ -32,16 +32,23 @@ export default function Checkout() {
   }, [cart]);
 
   const handlePlaceOrder = () => {
-    // ✅ VALIDATION (ONLY ADDED PART)
     if (!city.trim() || !street.trim() || !landmark.trim()) {
       alert("Please fill all delivery details.");
       return;
     }
 
-    // SAFE PLACEHOLDER (unchanged)
     console.log("Placing order...", { items, total, city, street, landmark });
 
     alert("Order placed successfully!");
+
+    // ✅ ADDED ONLY NAVIGATION (IMPORTANT FIX)
+    router.push({
+      pathname: "/PaymentPage",
+      params: {
+        cart: JSON.stringify(items),
+        total,
+      },
+    });
   };
 
   return (
@@ -51,7 +58,6 @@ export default function Checkout() {
     >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.container}>
-          {/* HEADER */}
           <View style={styles.header}>
             <TouchableOpacity
               onPress={() => router.back()}
@@ -63,7 +69,6 @@ export default function Checkout() {
             <Text style={styles.title}>Your Cart Food</Text>
           </View>
 
-          {/* CART ITEMS */}
           <FlatList
             data={items}
             keyboardShouldPersistTaps="handled"
@@ -82,13 +87,11 @@ export default function Checkout() {
             )}
           />
 
-          {/* TOTAL */}
           <View style={styles.totalBox}>
             <Text style={styles.totalText}>Total</Text>
             <Text style={styles.totalValue}>Rs {total}</Text>
           </View>
 
-          {/* DELIVERY DETAILS */}
           <View style={styles.deliveryBox}>
             <Text style={styles.deliveryTitle}>Delivery Details</Text>
 
@@ -115,7 +118,6 @@ export default function Checkout() {
             />
           </View>
 
-          {/* BUTTONS */}
           <TouchableOpacity style={styles.placeBtn} onPress={handlePlaceOrder}>
             <Text style={styles.placeText}>Place Order</Text>
           </TouchableOpacity>
@@ -132,14 +134,13 @@ export default function Checkout() {
   );
 }
 
-/* ---------------- STYLES ---------------- */
+/* styles unchanged */
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
     padding: 15,
   },
-
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -148,20 +149,17 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     position: "relative",
   },
-
   backBtn: {
     position: "absolute",
     left: 0,
     padding: 10,
   },
-
   title: {
     fontSize: 18,
     fontWeight: "900",
     color: "#FF4800",
     textAlign: "center",
   },
-
   card: {
     flexDirection: "row",
     alignItems: "center",
@@ -170,22 +168,15 @@ const styles = StyleSheet.create({
     backgroundColor: "#f5f5f5",
     borderRadius: 12,
   },
-
   image: {
     width: 50,
     height: 50,
     borderRadius: 10,
     marginRight: 10,
   },
-
   name: { fontWeight: "700" },
   price: { color: "#666" },
-
-  qty: {
-    fontWeight: "bold",
-    color: "#FF4800",
-  },
-
+  qty: { fontWeight: "bold", color: "#FF4800" },
   totalBox: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -195,18 +186,8 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginVertical: 10,
   },
-
-  totalText: {
-    fontSize: 16,
-    fontWeight: "700",
-  },
-
-  totalValue: {
-    fontSize: 16,
-    fontWeight: "900",
-    color: "#FF4800",
-  },
-
+  totalText: { fontSize: 16, fontWeight: "700" },
+  totalValue: { fontSize: 16, fontWeight: "900", color: "#FF4800" },
   deliveryBox: {
     borderWidth: 1,
     borderColor: "#ddd",
@@ -214,12 +195,7 @@ const styles = StyleSheet.create({
     padding: 15,
     marginTop: 10,
   },
-
-  deliveryTitle: {
-    fontWeight: "800",
-    marginBottom: 10,
-  },
-
+  deliveryTitle: { fontWeight: "800", marginBottom: 10 },
   input: {
     borderWidth: 1,
     borderColor: "#ddd",
@@ -228,7 +204,6 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     color: "#000",
   },
-
   placeBtn: {
     backgroundColor: "#FF4800",
     padding: 15,
@@ -236,12 +211,7 @@ const styles = StyleSheet.create({
     marginTop: 15,
     alignItems: "center",
   },
-
-  placeText: {
-    color: "#fff",
-    fontWeight: "900",
-  },
-
+  placeText: { color: "#fff", fontWeight: "900" },
   cancelBtn: {
     marginTop: 10,
     borderWidth: 1.5,
@@ -250,9 +220,5 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: "center",
   },
-
-  cancelText: {
-    color: "#FF4800",
-    fontWeight: "800",
-  },
+  cancelText: { color: "#FF4800", fontWeight: "800" },
 });
